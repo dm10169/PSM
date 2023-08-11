@@ -275,7 +275,7 @@ function ToggleMode($mode) {
 }
 
 # Define the font size for tags and images in the ListBox
-$fontSize = 14
+$fontSize = 12
 $cellHeight = 44
 
 function DisplayRandomQuote {
@@ -341,7 +341,7 @@ function CreateDefaultScriptAndJson {
         [string]$scriptPath
     )
     
-    Write-Host "Creating default script and JSON in path: $scriptPath"
+    Write-Host "Creating default script and JSON in path: $scriptPath" -ForegroundColor Green
     $defaultScriptPath = Join-Path -Path $scriptPath -ChildPath "DefaultScript.ps1"
     $defaultJsonPath = Join-Path -Path $scriptPath -ChildPath "DefaultScript.json"
 
@@ -693,7 +693,7 @@ function ShowTagSelectionForm {
     $tagForm.Size = New-Object System.Drawing.Size(265, 995)  # Width is half, height is the same
     $tagForm.FormBorderStyle = "FixedSingle"
     $tagForm.StartPosition = "CenterScreen"
-    $tagForm.BackColor = [System.Drawing.Color]::LightPink  # Set the background color to light pink
+    $tagForm.BackColor = [System.Drawing.Color]::DarkSlateGray  # Set the background color to light pink
 
     # ListBox for tag selection
     $listBoxTags = New-Object System.Windows.Forms.ListBox
@@ -1204,11 +1204,13 @@ $tags = @(
     @{ Name = "Broken"; Icon = "🔨" },
     @{ Name = "Certificates"; Icon = "📜" },
     @{ Name = "Cloud"; Icon = "☁️" },
+    @{ Name = "Commands"; Icon = "⌨️" },
     @{ Name = "Configuration"; Icon = "⚙️" },
     @{ Name = "Counters"; Icon = "🔢" },
     @{ Name = "Databases"; Icon = "🗃️" },
     @{ Name = "DCAP"; Icon = "🔒" },
     @{ Name = "Deployment"; Icon = "🚀" },
+    @{ Name = "Design"; Icon = "✏️" }
     @{ Name = "Development"; Icon = "👩‍💻" },
     @{ Name = "Error Handling"; Icon = "❌" },
     @{ Name = "Excel"; Icon = "📊" },
@@ -1225,12 +1227,14 @@ $tags = @(
     @{ Name = "Loops"; Icon = "➰" },
     @{ Name = "Logging"; Icon = "📝" },
     @{ Name = "Maintenance"; Icon = "🔧" },
+    @{ Name = "Management"; Icon = "👨‍💼" },
     @{ Name = "Mine"; Icon = "🏴" },
     @{ Name = "Monitoring"; Icon = "👀" },
     @{ Name = "Modules"; Icon = "📦" },
     @{ Name = "Networking"; Icon = "🌐" },
     @{ Name = "New Script"; Icon = "🆕" },
     @{ Name = "Not Mine"; Icon = "🏳️" },
+    @{ Name = "Open Tasks"; Icon = "📝" },
     @{ Name = "Parameters"; Icon = "🛠️" },
     @{ Name = "PowerShell"; Icon = "📜" },
     @{ Name = "PS Dashboard"; Icon = "📊" },
@@ -1300,7 +1304,7 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = "PowerShell Script Manager $scriptVersionString"
 $form.Size = New-Object System.Drawing.Size(880, 1000) # Increase W = Wider, H = Taller.
 $form.StartPosition = "CenterScreen"
-$form.BackColor = [System.Drawing.Color]::PowderBlue
+$form.BackColor = [System.Drawing.Color]::Wheat
 
 ## Create a button to open the summer colors form
 #$buttonViewColors = New-Object System.Windows.Forms.Button
@@ -1328,58 +1332,78 @@ $form.Controls.Add($richTextBoxOutput)
 
 # Scripts Path Label
 $labelScriptsPath = New-Object System.Windows.Forms.Label
-$labelScriptsPath.Text = "Scripts Path:"
-$labelScriptsPath.Location = New-Object System.Drawing.Point(15, 15) # Increase X = Right, y = Down
-$labelScriptsPath.Size = New-Object System.Drawing.Size(110, 30)     # Increase W = Wider, H = Taller.
-$labelScriptsPath.Font = New-Object System.Drawing.Font("Agency FB", 12)
+$labelScriptsPath.Text = "Script Functions"
+$labelScriptsPath.Location = New-Object System.Drawing.Point(60, 25) # Increase X = Right, y = Down
+$labelScriptsPath.Size = New-Object System.Drawing.Size(103, 15)     # Increase W = Wider, H = Taller.
+$labelScriptsPath.Font = New-Object System.Drawing.Font("Mistral", 10)
 $form.Controls.Add($labelScriptsPath)
 
 # Script Path Text Box
 $textBoxScriptsPath = New-Object System.Windows.Forms.TextBox
-$textBoxScriptsPath.Location = New-Object System.Drawing.Point(135, 15) # Increase X = Right, y = Down
-$textBoxScriptsPath.Size = New-Object System.Drawing.Size(475, 30)      # Increase W = Wider, H = Taller.
-$textBoxScriptsPath.Font = New-Object System.Drawing.Font("Agency FB", 14, [System.Drawing.FontStyle]::Bold)
+$textBoxScriptsPath.Location = New-Object System.Drawing.Point(0, 7) # Increase X = Right, y = Down
+$textBoxScriptsPath.Size = New-Object System.Drawing.Size(830, 30)      # Increase W = Wider, H = Taller.
+$textBoxScriptsPath.Font = New-Object System.Drawing.Font("Georgia", 16, [System.Drawing.FontStyle]::Bold)
 $textBoxScriptsPath.BorderStyle = "None"
 $textBoxScriptsPath.BackColor = $form.BackColor
-$textBoxScriptsPath.ForeColor = [System.Drawing.Color]::CadetBlue
+$textBoxScriptsPath.ForeColor = [System.Drawing.Color]::Black
 $textBoxScriptsPath.ReadOnly = $true
+$textBoxScriptsPath.TextAlign = [System.Windows.Forms.HorizontalAlignment]::Center # Center alignment
 $textBoxScriptsPath.Text = Get-ConfigScriptPath
 $textBoxScriptsPath.CharacterCasing = "Upper"
+$textBoxScriptsPath.Add_Click({
+    Set-ScriptsPath
+})
 $form.Controls.Add($textBoxScriptsPath)
 
 # Change Path Button
-$buttonChangePath = New-Object System.Windows.Forms.Button
-$buttonChangePath.Text = "Change Path"
-$buttonChangePath.Location = New-Object System.Drawing.Point(622, 10) # Increase X = Right, y = Down
-$buttonChangePath.Size = New-Object System.Drawing.Size(110, 25)      # Increase W = Wider, H = Taller.
-$buttonChangePath.BackColor = [System.Drawing.Color]::Gray
-$buttonChangePath.ForeColor = [System.Drawing.Color]::WhiteSmoke
+#$buttonChangePath = New-Object System.Windows.Forms.Button
+#$buttonChangePath.Text = "Click here to change the Scripts Path"
+#$buttonChangePath.Location = New-Object System.Drawing.Point(285, 30) # Increase X = Right, y = Down
+#$buttonChangePath.Size = New-Object System.Drawing.Size(200, 15)      # Increase W = Wider, H = Taller.
+#$buttonChangePath.BackColor = [System.Drawing.Color]::Gray
+#$buttonChangePath.ForeColor = [System.Drawing.Color]::WhiteSmoke
+#$buttonChangePath.FlatStyle = [Windows.Forms.FlatStyle]::System
 # Change Path Event Handler
-$buttonChangePath.Add_Click({
-    Set-ScriptsPath
-})
+#$buttonChangePath.Add_Click({
+    #Set-ScriptsPath
+#})
 
-$form.Controls.Add($buttonChangePath)
+#$form.Controls.Add($buttonChangePath)
 
-$buttonOpenFolder = New-Object System.Windows.Forms.Button
-$buttonOpenFolder.Text = "Open Folder"
-$buttonOpenFolder.Location = New-Object System.Drawing.Point(745, 10) # Modified location: Adjusted for longer textbox
-$buttonOpenFolder.Size = New-Object System.Drawing.Size(110, 25) # Modified size: 10% longer
-$buttonOpenFolder.BackColor = [System.Drawing.Color]::Gray
-$buttonOpenFolder.ForeColor = [System.Drawing.Color]::WhiteSmoke
+#$buttonOpenFolder = New-Object System.Windows.Forms.Button
+#$buttonOpenFolder.Text = "Open Folder"
+#$buttonOpenFolder.Location = New-Object System.Drawing.Point(745, 10) # Modified location: Adjusted for longer textbox
+#$buttonOpenFolder.Size = New-Object System.Drawing.Size(80, 25) # Modified size: 10% longer
+#$buttonOpenFolder.BackColor = [System.Drawing.Color]::Gray
+#$buttonOpenFolder.ForeColor = [System.Drawing.Color]::WhiteSmoke
+#$buttonOpenFolder.FlatStyle = [Windows.Forms.FlatStyle]::System
 
 # Open Folder Event Handler
-$buttonOpenFolder.Add_Click({
-    Invoke-Item -Path $textBoxScriptsPath.Text
+#$buttonOpenFolder.Add_Click({
+    #Invoke-Item -Path $textBoxScriptsPath.Text
+#})
+
+#$form.Controls.Add($buttonOpenFolder)
+
+# Function to draw a rectangle
+$form.Add_Paint({
+    $graphics = $_.Graphics
+    $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::Gray, 1)
+    $rectangle = New-Object System.Drawing.Rectangle(30, 35, 800, 50) #Right,Down,Wide,Tall
+    $graphics.DrawRectangle($pen, $rectangle)
 })
 
-$form.Controls.Add($buttonOpenFolder)
+# Change button sizes
+$buttonsize = 65
+# Define the gap between buttons
+$buttonGap = 6
+$buttonHeight = 30
 
-# Button Load Scripts + ListBox Scripts Event Handler
+# Load Button
 $buttonLoadScripts = New-Object System.Windows.Forms.Button
 $buttonLoadScripts.Text = "Load"
-$buttonLoadScripts.Location = New-Object System.Drawing.Point(10, 46) # Increase X = Right, y = Down
-$buttonLoadScripts.Size = New-Object System.Drawing.Size(80, 33)     # Increase W = Wider, H = Taller. 
+$buttonLoadScripts.Location = New-Object System.Drawing.Point(45, 46) # Increase X = Right, y = Down
+$buttonLoadScripts.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)     # Increase W = Wider, H = Taller. 
 #$buttonLoadScripts.BackColor = [System.Drawing.Color]::DarkBlue
 $buttonLoadScripts.BackColor = [System.Drawing.Color]::NavajoWhite
 $buttonLoadScripts.ForeColor = [System.Drawing.Color]::Black
@@ -1427,7 +1451,7 @@ With a built-in tagging system, finding scripts is easier than ever. Efficiently
     }
 
     # Create a default script and JSON file if they don't already exist
-    Write-Host "The Scriptpath is $Scriptpath"
+    Write-Host "The Scriptpath is $Scriptpath" -ForegroundColor Green
     CreateDefaultScriptAndJson -scriptPath $scriptPath
 
     # Load the scripts into the list box
@@ -1444,7 +1468,7 @@ With a built-in tagging system, finding scripts is easier than ever. Efficiently
     }
 })
 $form.Controls.Add($buttonLoadScripts)
-
+#$groupbox.Controls.Add($ButtonLoadScripts)
 
 # Button for Search Mode (Default button)
 $buttonSearchMode = New-Object System.Windows.Forms.Button
@@ -1452,7 +1476,7 @@ $buttonSearchMode.Text = "Search Tags to Filter"
 $buttonSearchMode.Location = New-Object System.Drawing.Point(13, 500) # Increase X = Right, Y = Down
 $buttonSearchMode.Size = New-Object System.Drawing.Size(150, 25) # Increase W = Wider, H = Taller
 $buttonSearchMode.BackColor = [System.Drawing.Color]::GhostWhite  # Light blue color
-$buttonSearchMode.ForeColor = [System.Drawing.Color]::CadetBlue  # Black text color
+$buttonSearchMode.ForeColor = [System.Drawing.Color]::DarkSlateGray  # Black text color
 # Event handler for the "Search" button click
 $buttonSearchMode.Add_Click({
     ShowTagSelectionForm
@@ -1469,8 +1493,7 @@ $labelDevelopedBy.BackColor = [System.Drawing.Color]::White
 $labelDevelopedBy.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $form.Controls.Add($labelDevelopedBy)
 
-# Define the gap between buttons
-$buttonGap = 5
+
 
 # Calculate the position of the new buttons
 $newButtonX = $buttonLoadScripts.Left + $buttonLoadScripts.Width + $buttonGap
@@ -1481,7 +1504,7 @@ $buttonEditScript = New-Object System.Windows.Forms.Button
 $buttonEditScript.Text = "Edit"
 #$buttonEditScript.Location = New-Object System.Drawing.Point(132, 46) # Increase X = Right, y = Down
 $buttonEditScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
-$buttonEditScript.Size = New-Object System.Drawing.Size(80, 33)      # Increase W = Wider, H = Taller.
+$buttonEditScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
 #$buttonEditScript.BackColor = [System.Drawing.Color]::Orange
 $buttonEditScript.BackColor = [System.Drawing.Color]::PeachPuff
 $buttonEditScript.ForeColor = [System.Drawing.Color]::Black
@@ -1505,9 +1528,9 @@ $newButtonY = $buttonEditScript.Top
 $buttoncopyScript = New-Object System.Windows.Forms.Button
 $buttoncopyScript.Text = "Copy"
 $buttoncopyScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
-$buttoncopyScript.Size = New-Object System.Drawing.Size(80, 33)      # Increase W = Wider, H = Taller.
+$buttoncopyScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
 #$buttoncopyScript.BackColor = [System.Drawing.Color]::LightBlue
-$buttoncopyScript.BackColor = [System.Drawing.Color]::SandyBrown
+$buttoncopyScript.BackColor = [System.Drawing.Color]::BurlyWood
 $buttoncopyScript.ForeColor = [System.Drawing.Color]::Black
 
 # Event handler for the Copy Script button
@@ -1545,8 +1568,6 @@ $buttonCopyScript.Add_Click({
     Refresh-ScriptsInListBox
 })
 
-
-
 $form.Controls.Add($buttonCopyScript)
 
 
@@ -1559,10 +1580,10 @@ $buttonCreateScript = New-Object System.Windows.Forms.Button
 $buttonCreateScript.Text = "Create"
 #$buttonCreateScript.Location = New-Object System.Drawing.Point(254, 46) # Increase X = Right, y = Down
 $buttonCreateScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
-$buttonCreateScript.Size = New-Object System.Drawing.Size(80, 33)      # Increase W = Wider, H = Taller.
+$buttonCreateScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
 #$buttonCreateScript.BackColor = [System.Drawing.Color]::LimeGreen
-$buttonCreateScript.BackColor = [System.Drawing.Color]::CadetBlue
-$buttonCreateScript.ForeColor = [System.Drawing.Color]::Black
+$buttonCreateScript.BackColor = [System.Drawing.Color]::Peru
+$buttonCreateScript.ForeColor = [System.Drawing.Color]::White
 # Create Script Event Handler
 $buttonCreateScript.Add_Click({
 
@@ -1635,8 +1656,8 @@ $buttonCreateScript.Add_Click({
     $buttonCreateNewScript = New-Object System.Windows.Forms.Button
     $buttonCreateNewScript.Text = "Create"
     $buttonCreateNewScript.Location = New-Object System.Drawing.Point(10, 670) # Increase X = Right, y = Down
-    $buttonCreateNewScript.Size = New-Object System.Drawing.Size(110, 33)      # Increase W = Wider, H = Taller.
-   $buttonCreateNewScript.Add_Click({
+    $buttonCreateNewScript.Size = New-Object System.Drawing.Size($buttonsize, 33)      # Increase W = Wider, H = Taller.
+    $buttonCreateNewScript.Add_Click({
     $newScriptName = $textBoxNewScriptName.Text
 
     if (-not [string]::IsNullOrWhiteSpace($newScriptName)) {
@@ -1693,9 +1714,9 @@ $buttonRenameScript = New-Object System.Windows.Forms.Button
 $buttonRenameScript.Text = "Rename"
 #$buttonRenameScript.Location = New-Object System.Drawing.Point(377, 46)
 $buttonRenameScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
-$buttonRenameScript.Size = New-Object System.Drawing.Size(80, 33)
+$buttonRenameScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
 $buttonRenameScript.BackColor = [System.Drawing.Color]::Coral
-$buttonRenameScript.ForeColor = [System.Drawing.Color]::Black
+$buttonRenameScript.ForeColor = [System.Drawing.Color]::White
 $form.Controls.Add($buttonRenameScript)
 
 # Define colors
@@ -1813,9 +1834,9 @@ $buttonDeleteScript = New-Object System.Windows.Forms.Button
 $buttonDeleteScript.Text = "Delete"
 #$buttonDeleteScript.Location = New-Object System.Drawing.Point(499, 46) # Increase X = Right, y = Down
 $buttonDeleteScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
-$buttonDeleteScript.Size = New-Object System.Drawing.Size(80, 33)      # Increase W = Wider, H = Taller.
-$buttonDeleteScript.BackColor = [System.Drawing.Color]::Red
-$buttonDeleteScript.ForeColor = [System.Drawing.Color]::MistyRose
+$buttonDeleteScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
+$buttonDeleteScript.BackColor = [System.Drawing.Color]::FireBrick
+$buttonDeleteScript.ForeColor = [System.Drawing.Color]::White
 
 # Event handler for the Delete Script button
 $buttonDeleteScript.Add_Click({
@@ -1870,19 +1891,24 @@ $newButtonY = $buttonDeleteScript.Top
 
 # Run Script Button
 $buttonRunScript = New-Object System.Windows.Forms.Button
-$buttonRunScript.Text = "Run Script"
+$buttonRunScript.Text = "Run"
 #$buttonRunScript.Location = New-Object System.Drawing.Point(622, 46) # Increase X = Right, y = Down
 $buttonRunScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
-$buttonRunScript.Size = New-Object System.Drawing.Size(80, 33)      # Increase W = Wider, H = Taller.
-$buttonRunScript.BackColor = [System.Drawing.Color]::Green
-$buttonRunScript.ForeColor = [System.Drawing.Color]::LightGreen
+$buttonRunScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
+$buttonRunScript.BackColor = [System.Drawing.Color]::MediumAquaMarine
+$buttonRunScript.ForeColor = [System.Drawing.Color]::Black
 
 # Run Script Event Handler
 $buttonRunScript.Add_Click({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
-        $scriptPath = Join-Path -Path $textBoxScriptsPath.Text -ChildPath $selectedScript
+        $scriptName = $selectedScript -replace '\.ps1$',''
+        $scriptPath = Join-Path -Path $textBoxScriptsPath.Text -ChildPath ("{0}.ps1" -f $selectedScript)
+        Write-Host "Starting Script In Powershell 7: $ScriptPath" -ForegroundColor Green
         Start-Process pwsh -ArgumentList "-File `"$scriptPath`""
+    }
+    else {
+        Write-Host "No Script found at: $ScriptPath" -ForegroundColor Yellow
     }
 })
 $form.Controls.Add($buttonRunScript)
@@ -1910,8 +1936,8 @@ $buttonBackupScript = New-Object System.Windows.Forms.Button
 $buttonBackupScript.Text = "Backup"
 #$buttonBackupScript.Location = New-Object System.Drawing.Point(745, 46)
 $buttonBackupScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
-$buttonBackupScript.Size = New-Object System.Drawing.Size(80, 33)
-$buttonBackupScript.BackColor = [System.Drawing.Color]::Indigo
+$buttonBackupScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonBackupScript.BackColor = [System.Drawing.Color]::SteelBlue
 $buttonBackupScript.ForeColor = [System.Drawing.Color]::White
 
 # Backup Script Event Handler
@@ -1990,7 +2016,6 @@ $buttonBackupScript.Add_Click({
 
 $form.Controls.Add($buttonBackupScript)
 
-
 # Calculate the position of the new buttons
 $newButtonX = $buttonBackupScript.Left + $buttonBackupScript.Width + $buttonGap
 $newButtonY = $buttonBackupScript.Top
@@ -2000,9 +2025,9 @@ $buttonArchiveScript = New-Object System.Windows.Forms.Button
 $buttonArchiveScript.Text = "Archive"
 #$buttonArchiveScript.Location = New-Object System.Drawing.Point(745, 46)
 $buttonArchiveScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
-$buttonArchiveScript.Size = New-Object System.Drawing.Size(80, 33)
-$buttonArchiveScript.BackColor = [System.Drawing.Color]::Black
-$buttonArchiveScript.ForeColor = [System.Drawing.Color]::Ivory
+$buttonArchiveScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonArchiveScript.BackColor = [System.Drawing.Color]::DarkSlateBlue
+$buttonArchiveScript.ForeColor = [System.Drawing.Color]::White
 $buttonArchiveScript.Add_Click({
     # Check if a script is selected
     if ($listBoxScripts.SelectedIndex -eq -1) {
@@ -2035,19 +2060,36 @@ $buttonArchiveScript.Add_Click({
 $form.Controls.Add($buttonArchiveScript)
 
 # Calculate the position of the new buttons
-$newButtonX = $buttonFutureScript.Left + $buttonFutureScript.Width + $buttonGap
-$newButtonY = $buttonFutureScript.Top
+$newButtonX = $buttonArchiveScript.Left + $buttonArchiveScript.Width + $buttonGap
+$newButtonY = $buttonArchiveScript.Top
 
-# Future2 Script Button
-$buttonFuture2Script = New-Object System.Windows.Forms.Button
-$buttonFuture2Script.Text = "Future2"
-#$buttonFuture2Script.Location = New-Object System.Drawing.Point(745, 46)
-$buttonFuture2Script.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
-$buttonFuture2Script.Size = New-Object System.Drawing.Size(80, 33)
-$buttonFuture2Script.BackColor = [System.Drawing.Color]::GhostWhite
-$buttonFuture2Script.ForeColor = [System.Drawing.Color]::Black
-$form.Controls.Add($buttonFuture2Script)
+# Move Script Button
+$buttonMoveScript = New-Object System.Windows.Forms.Button
+$buttonMoveScript.Text = "Move"
+#$buttonMoveScript.Location = New-Object System.Drawing.Point(745, 46)
+$buttonMoveScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
+$buttonMoveScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonMoveScript.BackColor = [System.Drawing.Color]::MidnightBlue
+$buttonMoveScript.ForeColor = [System.Drawing.Color]::White
+$form.Controls.Add($buttonMoveScript)
 
+# Calculate the position of the new buttons
+$newButtonX = $buttonMoveScript.Left + $buttonMoveScript.Width + $buttonGap
+$newButtonY = $buttonMoveScript.Top
+
+# Open Path Script Button
+$buttonOpenPathScript = New-Object System.Windows.Forms.Button
+$buttonOpenPathScript.Text = "Path"
+#$buttonOpenPathScript.Location = New-Object System.Drawing.Point(745, 46)
+$buttonOpenPathScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
+$buttonOpenPathScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonOpenPathScript.BackColor = [System.Drawing.Color]::Black
+$buttonOpenPathScript.ForeColor = [System.Drawing.Color]::White
+# Open Folder Event Handler
+$buttonOpenPathScript.Add_Click({
+    Invoke-Item -Path $textBoxScriptsPath.Text
+})
+$form.Controls.Add($buttonOpenPathScript)
 
 # Update the backup counter initially
 Update-BackupCounter
@@ -2062,7 +2104,7 @@ $form.Add_Click({
 # Scripts ListBox label
 $labelScripts = New-Object System.Windows.Forms.Label
 $labelScripts.Text = "Scripts Listbox:"
-$labelScripts.Location = New-Object System.Drawing.Point(10, 100) # Increase X = Right, y = Down
+$labelScripts.Location = New-Object System.Drawing.Point(13, 100) # Increase X = Right, y = Down
 $labelScripts.Size = New-Object System.Drawing.Size(150, 15)      # Increase W = Wider, H = Taller.
 $labelScripts.BorderStyle = [System.Windows.Forms.BorderStyle]::None
 $form.Controls.Add($labelScripts)
@@ -2075,6 +2117,12 @@ $listBoxScripts.Size = New-Object System.Drawing.Size(320, 355)   # Increase W =
 $listBoxScripts.SelectionMode = "One"
 $listBoxScripts.Font = New-Object System.Drawing.Font("Arial", 10)
 $form.Controls.Add($listBoxScripts)
+
+# Create a progress bar
+#$progressBar = New-Object Windows.Forms.ProgressBar
+#$progressBar.Location = New-Object Drawing.Point(15, 460)
+#$progressBar.Size = New-Object Drawing.Size(320, 20)
+#$form.Controls.Add($progressBar)
 
 # Commit Script & JSON to GIT Button
 $buttonCommitToGit = New-Object System.Windows.Forms.Button
@@ -2089,8 +2137,8 @@ $buttonCommitToGit.Add_Click({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
         $scriptPathWithoutExtension = Join-Path -Path $textBoxScriptsPath.Text -ChildPath $selectedScript
-        $scriptPath = $scriptPathWithoutExtension + ".ps1"
-        $jsonPath = $scriptPathWithoutExtension + ".json"
+        $scriptPath = ".\" + $selectedScript + ".ps1"
+        $jsonPath = ".\" + $selectedScript + ".json"
 
         # Ensure both the script and JSON file exist
         if (-not (Test-Path -Path $scriptPath)) {
@@ -2103,59 +2151,44 @@ $buttonCommitToGit.Add_Click({
             return
         }
 
-        Write-Host "Script Path: $scriptPath" -ForegroundColor Yellow
-        Write-Host "JSON Path: $jsonPath" -ForegroundColor Yellow
+        Write-Host "Script Path: $scriptPath" -ForegroundColor Green
+        Write-Host "JSON Path: $jsonPath" -ForegroundColor Green
 
         $gitRepoPath = $global:BaseScriptPath
         Set-Location -Path $gitRepoPath
 
-        if (-not $repoExists) {
-            # Initialize a new Git repository
-            git init $repoPath
-
-            # Add the remote repository
-            git remote add origin https://github.com/dm10169/PSM.git
+        # Initialize the Git repository if it does not exist
+        if (-not (Test-Path -Path (Join-Path -Path $gitRepoPath -ChildPath ".git"))) {
+            git init
         }
 
-        # Check if the repository is already initialized
-        $gitDir = Join-Path -Path $gitRepoPath -ChildPath ".git"
-        $repoExists = Test-Path -Path $gitDir -PathType Container
+                # Set the remote repository if not already set
+        $remoteUrl = "https://github.com/dm10169/PSM.git"
+        git remote add origin $remoteUrl -m "master"
 
-        if (-not $repoExists) {
-            # Initialize a new Git repository
-            git init $repoPath
-        }
+        # Fetch the latest changes from the remote repository
+        git fetch origin
 
-        # Check repository status
-        $status = & git status
-        Write-Host "Git Status: $status"
+        # Ensure the repository is checked out to the master branch
+        git checkout master
 
-        # Add and commit the script and JSON file to Git
-        & git add $scriptPath
-        & git add $jsonPath
+        # Add the specific files to the staging area
+        git add -A -- $scriptPath $jsonPath
 
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "Files added to Git staging area." -ForegroundColor Green
+        # Commit the changes
+        $commitMessage = "Committed script $selectedScript and its JSON file"
+        git commit -m $commitMessage
 
-            $commitMessage = "Committed script $selectedScript and its JSON file"
-            git commit -m $commitMessage
+        # Push the changes to the remote repository on the master branch
+        $pushOutput = git push origin master 2>&1
 
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "Changes committed successfully!" -ForegroundColor Green
-
-                # Push changes to the remote repository on GitHub
-                git push origin master
-
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Host "Changes pushed to remote repository on GitHub." -ForegroundColor Green
-                } else {
-                    Write-Host "Failed to push changes to remote repository on GitHub." -ForegroundColor Red
-                }
-            } else {
-                Write-Host "Failed to commit changes to Git." -ForegroundColor Red
-            }
+        # Check if the push was successful or if everything is up-to-date
+        if ($pushOutput -match "Everything up-to-date") {
+            Write-Host "No new changes to push. Repository is up-to-date." -ForegroundColor Green
+        } elseif ($pushOutput -match "pushed") {
+            Write-Host "Changes pushed to remote repository on GitHub." -ForegroundColor Green
         } else {
-            Write-Host "Failed to add files to Git staging area." -ForegroundColor Red
+            Write-Host "Failed to push changes to remote repository on GitHub." -ForegroundColor Red
         }
     } else {
         Write-Host "No script selected." -ForegroundColor Yellow
@@ -2163,11 +2196,7 @@ $buttonCommitToGit.Add_Click({
 })
 
 
-
-
-
 $form.Controls.Add($buttonCommitToGit)
-
 
 ## Create a horizontal separator line
 ##$horizontalLine = New-Object System.Windows.Forms.Label
@@ -2211,10 +2240,11 @@ $form.Controls.Add($labelName)
 $textBoxName = New-Object System.Windows.Forms.TextBox
 $textBoxName.Location = New-Object System.Drawing.Point(450, 100) # Increase X = Right, y = Down
 $textBoxName.Size = New-Object System.Drawing.Size(400, 100)      # Increase W = Wider, H = Taller.
-$textBoxName.Font = New-Object System.Drawing.Font("Agency FB", 16, [System.Drawing.FontStyle]::Bold)
-#$textBoxName.BorderStyle = "None"
+$textBoxName.Font = New-Object System.Drawing.Font("Agency FB", 14, [System.Drawing.FontStyle]::Bold)
+$textBoxName.TextAlign = [System.Windows.Forms.HorizontalAlignment]::Center # Center the text
+$textBoxName.BorderStyle = "None"
 $textBoxName.BackColor = $form.BackColor
-$textBoxName.ForeColor = [System.Drawing.Color]::CadetBlue
+$textBoxName.ForeColor = [System.Drawing.Color]::DarkSlateGray
 $textBoxName.CharacterCasing = "Upper"
 $form.Controls.Add($textBoxName)
 
@@ -3144,7 +3174,8 @@ $buttonModificationLog = New-Object System.Windows.Forms.Button
 $buttonModificationLog.Text = "View Modification Log"
 $buttonModificationLog.Location = New-Object System.Drawing.Point(455, 495)  # Increase X = Right, Y = Down
 $buttonModificationLog.Size = New-Object System.Drawing.Size(195, 31)        # Increase W = Wider, H = Taller.
-$buttonModificationLog.BackColor = [System.Drawing.Color]::LightPink
+$buttonModificationLog.BackColor = [System.Drawing.Color]::SaddleBrown
+$buttonModificationLog.ForeColor = [System.Drawing.Color]::White
 $buttonModificationLog.Add_Click({ ShowModificationLog })
 $form.Controls.Add($buttonModificationLog)
 
@@ -3153,8 +3184,8 @@ $buttonViewToDoList = New-Object System.Windows.Forms.Button
 $buttonViewToDoList.Text = "View To-Do List"
 $buttonViewToDoList.Location = New-Object System.Drawing.Point(655, 495)  # Adjust the location
 $buttonViewToDoList.Size = New-Object System.Drawing.Size(195, 31)        # Adjust the size
-$buttonViewToDoList.BackColor = [System.Drawing.Color]::MediumSeaGreen
-$buttonViewToDoList.ForeColor = [System.Drawing.Color]::Black  # Set text color
+$buttonViewToDoList.BackColor = [System.Drawing.Color]::SaddleBrown
+$buttonViewToDoList.ForeColor = [System.Drawing.Color]::White  # Set text color
 $buttonViewToDoList.Add_Click({ ShowToDoList })
 $form.Controls.Add($buttonViewToDoList)
 
@@ -3177,12 +3208,13 @@ $form.Controls.Add($textBoxJsonFile)
 
 # Open JSON Button
 $buttonOpenJson = New-Object System.Windows.Forms.Button
-$buttonOpenJson.Text = "OPEN JSON"
+$buttonOpenJson.Text = "OPEN"
 $buttonOpenJson.Location = New-Object System.Drawing.Point(450, 432) # Increase X = Right, Y = Down
-$buttonOpenJson.Size = New-Object System.Drawing.Size(200, 22)       # Increase W = Wider, H = Taller.
-$buttonOpenJson.BackColor = [System.Drawing.Color]::MintCream
+$buttonOpenJson.Size = New-Object System.Drawing.Size(60, 22)       # Increase W = Wider, H = Taller.
+$buttonOpenJson.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonOpenJson.FlatAppearance.BorderSize = 0
+$buttonOpenJson.BackColor = [System.Drawing.Color]::BurlyWood
 $buttonOpenJson.ForeColor = [System.Drawing.Color]::Black
-
 # Event handler for the "Open JSON" button
 $buttonOpenJson.Add_Click({
     # Get the selected script from the ListBox
@@ -3222,19 +3254,14 @@ $buttonOpenJson.Add_Click({
 # Add the "Open JSON" button to the form
 $form.Controls.Add($buttonOpenJson)
 
-# Add the "Open JSON" button to the form
-$form.Controls.Add($buttonOpenJson)
-
-# Add controls to the form
-$form.Controls.Add($labelBackupCounter)
-$form.Controls.Add($labelBackupCountValue)
-
 # Delete JSON Button
 $buttonDeleteJson = New-Object System.Windows.Forms.Button
 $buttonDeleteJson.Text = "DELETE JSON"
-$buttonDeleteJson.Location = New-Object System.Drawing.Point(650, 432) # Increase X = Right, y = Down
-$buttonDeleteJson.Size = New-Object System.Drawing.Size(200, 22)       # Increase W = Wider, H = Taller.
-$buttonDeleteJson.BackColor = [System.Drawing.Color]::MintCream
+$buttonDeleteJson.Location = New-Object System.Drawing.Point(510, 432) # Increase X = Right, y = Down
+$buttonDeleteJson.Size = New-Object System.Drawing.Size(60, 22)       # Increase W = Wider, H = Taller.
+$buttonDeleteJson.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonDeleteJson.FlatAppearance.BorderSize = 0
+$buttonDeleteJson.BackColor = [System.Drawing.Color]::BurlyWood
 $buttonDeleteJson.ForeColor = [System.Drawing.Color]::Black
 # Delete JSON Button Event Handler
 $buttonDeleteJson.Add_Click({
@@ -3265,17 +3292,21 @@ $buttonDeleteJson.Add_Click({
         [System.Windows.Forms.MessageBox]::Show("Please select a Script to delete its JSON file.", "No Script Selected", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
     }
 })
-
 $form.Controls.Add($buttonDeleteJson)
 
+# Add controls to the form
+$form.Controls.Add($labelBackupCounter)
+$form.Controls.Add($labelBackupCountValue)
+
 # Save JSON Button
-$buttonSave = New-Object System.Windows.Forms.Button
-$buttonSave.Text = "SAVE JSON"
-$buttonSave.Location = New-Object System.Drawing.Point(720, 435) # Increase X = Right, y = Down
-$buttonSave.Size = New-Object System.Drawing.Size(130, 22)       # Increase W = Wider, H = Taller.
+#$buttonSave = New-Object System.Windows.Forms.Button
+#$buttonSave.Text = "SAVE JSON"
+#$buttonSave.Location = New-Object System.Drawing.Point(720, 435) # Increase X = Right, y = Down
+#$buttonSave.Size = New-Object System.Drawing.Size(130, 22)       # Increase W = Wider, H = Taller.
 #$buttonSave.BackColor = [System.Drawing.Color]::Pink
 #$buttonSave.ForeColor = [System.Drawing.Color]::Black
-$buttonSave.Visible = $false 
+#$buttonSave.Visible = $false
+<# 
 $buttonSave.Add_Click({
     if (-not $textBoxJsonFile.Text) {
         [System.Windows.Forms.MessageBox]::Show("Please select a Script to Save its JSON file.", "No Script Selected", "OK", [System.Windows.Forms.MessageBoxIcon]::Information)
@@ -3349,7 +3380,7 @@ $buttonSave.Add_Click({
     }
 })
 $form.Controls.Add($buttonSave)
-
+#>
 # Create a label for the Tags section
 $labelTags = New-Object System.Windows.Forms.Label
 $labelTags.Text = ""
