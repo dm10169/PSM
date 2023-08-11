@@ -2109,6 +2109,13 @@ $buttonCommitToGit.Add_Click({
         $gitRepoPath = $global:BaseScriptPath
         Set-Location -Path $gitRepoPath
 
+        if (-not $repoExists) {
+            # Initialize a new Git repository
+            git init $repoPath
+
+            # Add the remote repository
+            git remote add origin https://github.com/dm10169/PSM.git
+        }
 
         # Check if the repository is already initialized
         $gitDir = Join-Path -Path $gitRepoPath -ChildPath ".git"
