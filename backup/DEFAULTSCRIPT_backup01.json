@@ -1,0 +1,30 @@
+﻿{
+    "ScriptJson":  "C:\\SCRIPTS\\DefaultScript.json",
+    "Description":  "Default script",
+    "ScriptPath":  "C:\\SCRIPTS\\DefaultScript.ps1",
+    "Version":  "0.1",
+    "ModifiedBy":  "CURTI",
+    "Tags":  [
+                 "👩‍💻 Development",
+                 "📊 Excel",
+                 "🗑️ Junk",
+                 "🆕 New Script",
+                 "📜 PowerShell"
+             ],
+    "Author":  "CURTI",
+    "Name":  "DefaultScript",
+    "Modifications":  [
+                          {
+                              "Date":  "August 10, 2023 at 12:02 AM",
+                              "Modification":  "Default script created.",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.0"
+                          },
+                          {
+                              "Date":  "August 10, 2023 at 1:01 AM",
+                              "Modification":  "TESTING",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.1"
+                          }
+                      ]
+}

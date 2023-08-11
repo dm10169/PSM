@@ -1,0 +1,32 @@
+﻿{
+    "ScriptJson":  "C:\\SCRIPTS\\DefaultScript.json",
+    "Description":  "Default script",
+    "ScriptPath":  "C:\\SCRIPTS\\DefaultScript.ps1",
+    "Version":  "0.0",
+    "ModifiedBy":  "CURTI",
+    "Tags":  [
+                 "👩‍💻 Development",
+                 "🗑️ Junk",
+                 "🆕 New Script",
+                 "📜 PowerShell"
+             ],
+    "Author":  "CURTI",
+    "Name":  "DefaultScript",
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 2:11 AM",
+                              "Modification":  "Default script created.",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.0"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "Example Task 1",
+                         "DateCompleted":  "",
+                         "Task":  "Description of Task 1",
+                         "Status":  "NotStarted",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}
