@@ -1,5 +1,5 @@
 ﻿{
-    "Name":  "PSM-TODO-01",
+    "Name":  "PSM-TOGIT",
     "Author":  "CJDOVE - ChatGPT",
     "Description":  "PSM Master Script in Development",
     "ScriptJson":  "C:\\CURTIS\\PSM\\PSM.json",
@@ -10,8 +10,7 @@
                  "🔨 Broken",
                  "👩‍💻 Development",
                  "🚧 Fixing",
-                 "🏴 Mine",
-                 "📜 PowerShell"
+                 "🏴 Mine"
              ],
     "Modifications":  [
                           {
@@ -79,15 +78,19 @@
                               "Modification":  "TEST4",
                               "ModifiedBy":  "CJDOVE",
                               "Version":  "1.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 2:12 AM",
+                              "Modification":  "Renamed Script and JSON from PSM-TODO-01_COPY to PSM-TODO-DONE",
+                              "ModifiedBy":  "PSM-TODO-DONE"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 3:03 AM",
+                              "Modification":  "Renamed Script and JSON from PSM-TODO-DONE_COPY to PSM-TOGIT",
+                              "ModifiedBy":  "PSM-TOGIT"
                           }
                       ],
     "ToDoList":  [
-                     {
-                         "Title":  "",
-                         "DateCompleted":  "",
-                         "Task":  "",
-                         "Status":  "NotStarted",
-                         "CompletedBy":  ""
-                     }
+
                  ]
 }

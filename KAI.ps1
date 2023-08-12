@@ -104,11 +104,26 @@ function Copy-ScriptsAndConfig {
     $jsonPath = Join-Path $PSScriptRoot "PSM.json"
     $configPath = Join-Path $PSScriptRoot "config.json"
 
-    # Copy each file to the destination path
-    Copy-Item -Path $psmPath -Destination $destinationPath
-    Copy-Item -Path $jsonPath -Destination $destinationPath
-    Copy-Item -Path $configPath -Destination $destinationPath
+    # Function to copy the file if it does not exist at the destination
+    function Copy-IfNotExists {
+        param (
+            [string]$source,
+            [string]$destination
+        )
+        $destinationFile = Join-Path $destination (Split-Path $source -Leaf)
+        if (-Not (Test-Path $destinationFile)) {
+            Copy-Item -Path $source -Destination $destination
+        } else {
+            Write-Host "File $($source) already exists at the destination."
+        }
+    }
+
+    # Copy each file to the destination path, if it doesn't exist there already
+    Copy-IfNotExists -source $psmPath -destination $destinationPath
+    Copy-IfNotExists -source $jsonPath -destination $destinationPath
+    Copy-IfNotExists -source $configPath -destination $destinationPath
 }
+
 
 # Function to generate a new copy name with a dynamic increment
 function Get-NewCopyName {
@@ -143,7 +158,11 @@ function Refresh-ScriptsInListBox {
     }
 }
 
-
+# Retrieve or Set Base Script Path
+$global:BaseScriptPath = Get-ConfigScriptPath
+if (-not $global:BaseScriptPath) {
+    Set-ScriptsPath
+}
 
 # Function to Get Scripts File Path by joining the user-defined scripts path with the provided script name and appending the .ps1 extension.
 function Get-ScriptFilePath {
@@ -153,15 +172,6 @@ function Get-ScriptFilePath {
     return Join-Path -Path $textBoxScriptsPath.Text -ChildPath "$scriptName.ps1"
 }
 
-# Set Default Path
-$global:DefaultPath = [System.Environment]::GetFolderPath('MyDocuments')
-
-# Retrieve or Set Base Script Path
-$global:BaseScriptPath = Get-ConfigScriptPath
-if (-not $global:BaseScriptPath) {
-    Set-ScriptsPath
-}
-
 # Function to Get JSON File Path by joining the user-defined scripts path with the provided script name and appending the .json extension.
 function Get-JsonFilePath {
     param (
@@ -169,6 +179,10 @@ function Get-JsonFilePath {
     )
     return Join-Path -Path $textBoxScriptsPath.Text -ChildPath "$scriptName.json"
 }
+
+# Set Default Path
+$global:DefaultPath = [System.Environment]::GetFolderPath('MyDocuments')
+
 
 function Get-SoundFilePath {
     param (
@@ -336,6 +350,7 @@ function Get-BackupScriptCounter {
     }
 }
 
+# Helper function for creating DefaultScript if it don't exist
 function CreateDefaultScriptAndJson {
     param (
         [string]$scriptPath
@@ -370,7 +385,7 @@ function CreateDefaultScriptAndJson {
                         "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
                         "ModifiedBy" = $env:username.ToUpper()
                         "Modification" = "Default script created."
-                        "Version" = "0.0"
+                        "Version" = "0.1"
                     }
                 )
                 "ToDoList" = @(
@@ -397,7 +412,6 @@ function CreateDefaultScriptAndJson {
     }
 }
 
-
 # Helper function for validating JSON content
 function ValidateJsonContent {
     param (
@@ -414,14 +428,21 @@ function ValidateJsonContent {
         'Version'       = "0.0"
         'Tags'          = @("📜 PowerShell")
         'ModifiedBy'    = $env:USERNAME.ToUpper()
-        'Modifications' = @()
+        "Modifications" = @(
+                    @{
+                        "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                        "ModifiedBy" = $env:username.ToUpper()
+                        "Modification" = "Default script created."
+                        "Version" = "0.1"
+                    }
+                )
         'ToDoList'      = @( # Default structure for ToDoList
             @{
-                "Title" = "Example Task 1"
-                "Task" = "Description of Task 1"
-                "Status" = "NotStarted"
-                "CompletedBy" = ""
-                "DateCompleted" = ""
+            "Title" = "Review Script"
+            "Task" = "Review Script for errors and Update!"
+            "DateCompleted" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt") 
+            "Status" = ([TaskStatus]::NotStarted).ToString() # Convert the enum value to a string
+            "CompletedBy" = ""
             }
         )
         'ScriptJson'    = Join-Path -Path $ScriptsPath -ChildPath "$selectedScript.json"
@@ -491,15 +512,17 @@ function UpdateJsonContent {
         $jsonContent.Version = "0.1"  # Set the default version as 1.0 if the Version property is null
     }
     
-    # Get the highest version from the modifications
-    $highestVersion = Get-HighestVersionFromModifications $tableView
+    $highestVersion, $newJsonContent = Get-HighestVersionFromModifications -modifications $jsonContent.Modifications -jsonPath $jsonPath
 
-    # If the version is not set or is "1.0", set it to "0.1" for the first modification
-    if ($jsonContent.Version -eq "1.0" -or [Version]$jsonContent.Version -eq [Version]::new(0, 0)) {
+    Write-Host "Version before casting: $($jsonContent.Version), type: $($jsonContent.Version.GetType())"  # Debug line
+    if ([Version]$jsonContent.Version -eq [Version]"1.0" -or [Version]$jsonContent.Version -eq [Version]::new(0, 0)) {
+
         $jsonContent.Version = "0.1"
     }
 
-    # Update the version property
+    if ($null -eq $highestVersion) {
+        $highestVersion = "0.1"
+    }
     $jsonContent.Version = $highestVersion.ToString()
 
     # Save the updated JSON content back to the file
@@ -517,9 +540,16 @@ function UpdateJsonContent {
         $jsonContent.ModifiedBy = $env:USERNAME.ToUpper()
     }
 
-    if ($null -eq $jsonContent.Modifications) {
-        Add-Member -InputObject $jsonContent -NotePropertyName Modifications -NotePropertyValue @()
+    if (-not $jsonContent.PSObject.Properties['Modifications'] -or $jsonContent.Modifications.Length -eq 0) {
+        $defaultModification = @{
+            "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+            "ModifiedBy" = $env:USERNAME.ToUpper()
+            "Modification" = "Default script created."
+            "Version" = "0.1"
+        }
+        $jsonContent.Modifications = @($defaultModification)
     }
+
 
     # Delete unnecessary properties in the JSON
     $requiredProperties = @("Name", "ScriptPath", "ScriptJson", "Author", "Description", "Version", "Tags", "ModifiedBy", "Modifications","ToDoList")
@@ -532,6 +562,7 @@ function UpdateJsonContent {
     return $jsonContent
 }
 
+# function is responsible for loading, modifying, and displaying information related to a selected script
 function PopulateFieldsAndTags {
     try {
         
@@ -568,20 +599,29 @@ function PopulateFieldsAndTags {
                     "ScriptJson" = $jsonPath
                     "Author" = $env:username
                     "Description" = "New Script $selectedScript"
-                    "Version" = "0.0"  # Set the default version as 0.0
+                    "Version" = "0.1"  # Set the default version as 0.1
                     "Tags" = @("📜 PowerShell")
                     "ModifiedBy" = $env:username.ToUpper()
-                    "Modifications" = @()
+                    "Modifications" = @(
+                        @{
+                            "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                            "Version" = "0.1"
+                            "ModifiedBy" = $env:username.ToUpper()
+                            "Modification" = "Created $($selectedScript) a JSON Buddy"
+                        }
+                    )
                     "ToDoList" = @(
                         @{
-                            "Title" = "Example Task 1"
-                            "Task" = "Description of Task 1"
-                            "Status" = [TaskStatus]::NotStarted
+                            "Title" = "Review Script"
+                            "Task" = "Review Script for errors and Update!"
+                            "DateCompleted" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                            "Status" = ([TaskStatus]::NotStarted).ToString() # Convert the enum value to a string
                             "CompletedBy" = ""
-                            "DateCompleted" = ""
                         }
                     )
                 }
+                $jsonContent | ConvertTo-Json -Depth 4 | Out-File -FilePath $jsonPath -Encoding UTF8
+                Write-Host "JSON file $jsonPath created."
             }
 
             # Populate fields with the JSON content
@@ -635,7 +675,6 @@ function PopulateFieldsAndTags {
         Write-Host "An error occurred: $_"
     }
 }
-
 
 
 # Function to populate the ListBox with tags and highlight matching tags
@@ -1327,6 +1366,10 @@ $richTextBoxOutput = New-Object System.Windows.Forms.RichTextBox
 $richTextBoxOutput.Location = New-Object System.Drawing.Point(15, 760) # Increase X = Right, Y = Down
 $richTextBoxOutput.Size = New-Object System.Drawing.Size(835, 180)     # Increase W = Wider, H = Taller.
 $richTextBoxOutput.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 9) # Set font size
+#$richTextBoxOutput.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 9) # Set font size
+#$richTextBoxOutput.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 9) # Set font size
+$richTextBoxOutput.BackColor = [System.Drawing.Color]::SaddleBrown
+$richTextBoxOutput.ForeColor = [System.Drawing.Color]::WhiteSmoke
 $richTextBoxOutput.ReadOnly = $true
 $form.Controls.Add($richTextBoxOutput)
 
@@ -1394,9 +1437,9 @@ $form.Add_Paint({
 })
 
 # Change button sizes
-$buttonsize = 65
+$buttonsize = 70
 # Define the gap between buttons
-$buttonGap = 6
+$buttonGap = 0
 $buttonHeight = 30
 
 # Load Button
@@ -1405,6 +1448,8 @@ $buttonLoadScripts.Text = "Load"
 $buttonLoadScripts.Location = New-Object System.Drawing.Point(45, 46) # Increase X = Right, y = Down
 $buttonLoadScripts.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)     # Increase W = Wider, H = Taller. 
 #$buttonLoadScripts.BackColor = [System.Drawing.Color]::DarkBlue
+$buttonLoadScripts.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonLoadScripts.FlatAppearance.BorderSize = 0
 $buttonLoadScripts.BackColor = [System.Drawing.Color]::NavajoWhite
 $buttonLoadScripts.ForeColor = [System.Drawing.Color]::Black
 
@@ -1420,19 +1465,21 @@ $buttonLoadScripts.Add_Click({
 
     $richTextBoxOutput.Clear()
     $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Arial", 18, [System.Drawing.FontStyle]::Bold)
-    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::CadetBlue
-    $richTextBoxOutput.BackColor = [System.Drawing.Color]::FromArgb(230, 230, 230)  # Lighter gray
+    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::SaddleBrown
+    #$richTextBoxOutput.BackColor = [System.Drawing.Color]::FromArgb(230, 230, 230)  # Lighter gray
+    $richTextBoxOutput.BackColor = [System.Drawing.Color]::SaddleBrown
+    $richTextBoxOutput.ForeColor = [System.Drawing.Color]::CornSilk
 
     $richTextBoxOutput.SelectionAlignment = [System.Windows.Forms.HorizontalAlignment]::Center  # Center the text
     $richTextBoxOutput.AppendText("Welcome to PowerShell Script Manager $scriptVersionString`r`n`r`n")
-    $richTextBoxOutput.ForeColor = [System.Drawing.Color]::Blue
+    $richTextBoxOutput.ForeColor = [System.Drawing.Color]::White
     $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Helvetica", 12)
     #$richTextBoxOutput.SelectionAlignment = [System.Windows.Forms.HorizontalAlignment]::Left  # Left align the text
  
-    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Black
-    $richTextBoxOutput.AppendText("PSM $scriptVersionString empowers users with various operations for script management. Create, edit, rename, delete, execute, and back up scripts effortlessly. Each script is accompanied by a JSON file, capturing essential details, including modifications, authors, versions, and timestamps.
+    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::White
+    $richTextBoxOutput.AppendText("PSM $scriptVersionString empowers users with various operations for script management. Each script will get it's own JSON, capturing essential details, including modifications, authors, versions, and timestamps.
 
-With a built-in tagging system, finding scripts is easier than ever. Efficiently search using keywords for streamlined script management and retrieval.")
+With a built-in tagging system and keyword search, finding scripts is easier than ever. Efficiently search using keywords for streamlined script management and retrieval.")
 
     # Check if the script path exists
     $scriptPath = $textBoxScriptsPath.Text
@@ -1484,9 +1531,9 @@ $buttonSearchMode.Add_Click({
 $form.Controls.Add($buttonSearchMode)
 
 $labelDevelopedBy = New-Object System.Windows.Forms.Label
-$labelDevelopedBy.Text = "Developed By: Curtis Dove"
-$labelDevelopedBy.Location = New-Object System.Drawing.Point(18, 439) # Increase X = Right, y = Down
-$labelDevelopedBy.Size = New-Object System.Drawing.Size(300, 20) # Increase W = Wider, H = Taller.
+$labelDevelopedBy.Text = "Developed By: Curtis Dove, MCSA MCSE VCP CASP"
+$labelDevelopedBy.Location = New-Object System.Drawing.Point(18, 450) # Increase X = Right, y = Down
+$labelDevelopedBy.Size = New-Object System.Drawing.Size(375, 20) # Increase W = Wider, H = Taller.
 $labelDevelopedBy.Font = New-Object System.Drawing.Font("Georgia", 8, ([System.Drawing.FontStyle]::Italic))
 $labelDevelopedBy.ForeColor = [System.Drawing.Color]::Gray
 $labelDevelopedBy.BackColor = [System.Drawing.Color]::White
@@ -1506,6 +1553,8 @@ $buttonEditScript.Text = "Edit"
 $buttonEditScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
 $buttonEditScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
 #$buttonEditScript.BackColor = [System.Drawing.Color]::Orange
+$buttonEditScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonEditScript.FlatAppearance.BorderSize = 0
 $buttonEditScript.BackColor = [System.Drawing.Color]::PeachPuff
 $buttonEditScript.ForeColor = [System.Drawing.Color]::Black
 
@@ -1530,6 +1579,8 @@ $buttoncopyScript.Text = "Copy"
 $buttoncopyScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
 $buttoncopyScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
 #$buttoncopyScript.BackColor = [System.Drawing.Color]::LightBlue
+$buttoncopyScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttoncopyScript.FlatAppearance.BorderSize = 0
 $buttoncopyScript.BackColor = [System.Drawing.Color]::BurlyWood
 $buttoncopyScript.ForeColor = [System.Drawing.Color]::Black
 
@@ -1582,6 +1633,8 @@ $buttonCreateScript.Text = "Create"
 $buttonCreateScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
 $buttonCreateScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
 #$buttonCreateScript.BackColor = [System.Drawing.Color]::LimeGreen
+$buttonCreateScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonCreateScript.FlatAppearance.BorderSize = 0
 $buttonCreateScript.BackColor = [System.Drawing.Color]::Peru
 $buttonCreateScript.ForeColor = [System.Drawing.Color]::White
 # Create Script Event Handler
@@ -1715,13 +1768,11 @@ $buttonRenameScript.Text = "Rename"
 #$buttonRenameScript.Location = New-Object System.Drawing.Point(377, 46)
 $buttonRenameScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
 $buttonRenameScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
-$buttonRenameScript.BackColor = [System.Drawing.Color]::Coral
+$buttonRenameScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonRenameScript.FlatAppearance.BorderSize = 0
+$buttonRenameScript.BackColor = [System.Drawing.Color]::Chocolate
 $buttonRenameScript.ForeColor = [System.Drawing.Color]::White
 $form.Controls.Add($buttonRenameScript)
-
-# Define colors
-$primaryColor = [System.Drawing.Color]::FromArgb(30, 30, 30) # Dark Gray
-$accentColor = [System.Drawing.Color]::FromArgb(255, 100, 100) # Light Red
 
 # Rename Script Event Handler
 $buttonRenameScript.Add_Click({
@@ -1740,26 +1791,29 @@ $buttonRenameScript.Add_Click({
         $inputBoxForm.Font = New-Object System.Drawing.Font("Segoe UI", 12)  # Set the font and size
         $inputBoxForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
         $inputBoxForm.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
-        $inputBoxForm.BackColor = $primaryColor  # Set the background color
+        $inputBoxForm.BackColor = [System.Drawing.Color]::BurlyWood   # Set the background color
         $inputBoxForm.ForeColor = [System.Drawing.Color]::Black  # Set the foreground (text) color
 
         $inputLabel = New-Object System.Windows.Forms.Label
         $inputLabel.Text = "Enter the new name for the script:"
-        $inputLabel.Location = New-Object System.Drawing.Point(10, 20)
-        $inputLabel.Size = New-Object System.Drawing.Size(250, 22)
+        $inputLabel.Location = New-Object System.Drawing.Point(10, 20) # Increase X = Right, y = Down
+        $inputLabel.Size = New-Object System.Drawing.Size(250, 22)     # Increase W = Wider, H = Taller.
         $inputBoxForm.Controls.Add($inputLabel)
 
         $inputTextBox = New-Object System.Windows.Forms.TextBox
-        $inputTextBox.Location = New-Object System.Drawing.Point(10, 50)
-        $inputTextBox.Size = New-Object System.Drawing.Size(250, 22)
+        $inputTextBox.Location = New-Object System.Drawing.Point(10, 50) # Increase X = Right, y = Down
+        $inputTextBox.Size = New-Object System.Drawing.Size(250, 30)     # Increase W = Wider, H = Taller.
         $inputTextBox.CharacterCasing = [System.Windows.Forms.CharacterCasing]::Upper  # Force text to be uppercase
+        $inputTextBox.BorderStyle = [System.Windows.Forms.BorderStyle]::None 
         $inputBoxForm.Controls.Add($inputTextBox)
 
         $inputButtonOK = New-Object System.Windows.Forms.Button
         $inputButtonOK.Text = "OK"
-        $inputButtonOK.Location = New-Object System.Drawing.Point(85, 80)
+        $inputButtonOK.Location = New-Object System.Drawing.Point(10, 80) # Increase X = Right, y = Down
+        $inputButtonOK.Size = New-Object System.Drawing.Size(250, 30)     # Increase W = Wider, H = Taller.
         $inputButtonOK.DialogResult = [System.Windows.Forms.DialogResult]::OK
-        $inputButtonOK.BackColor = $accentColor  # Set button color
+        $inputButtonOK.BackColor = [System.Drawing.Color]::SaddleBrown
+        $inputButtonOK.ForeColor = [System.Drawing.Color]::White
         $inputBoxForm.Controls.Add($inputButtonOK)
 
         $inputBoxForm.AcceptButton = $inputButtonOK
@@ -1835,6 +1889,8 @@ $buttonDeleteScript.Text = "Delete"
 #$buttonDeleteScript.Location = New-Object System.Drawing.Point(499, 46) # Increase X = Right, y = Down
 $buttonDeleteScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
 $buttonDeleteScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
+$buttonDeleteScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonDeleteScript.FlatAppearance.BorderSize = 0
 $buttonDeleteScript.BackColor = [System.Drawing.Color]::FireBrick
 $buttonDeleteScript.ForeColor = [System.Drawing.Color]::White
 
@@ -1895,6 +1951,8 @@ $buttonRunScript.Text = "Run"
 #$buttonRunScript.Location = New-Object System.Drawing.Point(622, 46) # Increase X = Right, y = Down
 $buttonRunScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY) # Increase X = Right, y = Down
 $buttonRunScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)      # Increase W = Wider, H = Taller.
+$buttonRunScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonRunScript.FlatAppearance.BorderSize = 0
 $buttonRunScript.BackColor = [System.Drawing.Color]::MediumAquaMarine
 $buttonRunScript.ForeColor = [System.Drawing.Color]::Black
 
@@ -1937,6 +1995,8 @@ $buttonBackupScript.Text = "Backup"
 #$buttonBackupScript.Location = New-Object System.Drawing.Point(745, 46)
 $buttonBackupScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
 $buttonBackupScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonBackupScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonBackupScript.FlatAppearance.BorderSize = 0
 $buttonBackupScript.BackColor = [System.Drawing.Color]::SteelBlue
 $buttonBackupScript.ForeColor = [System.Drawing.Color]::White
 
@@ -2026,6 +2086,8 @@ $buttonArchiveScript.Text = "Archive"
 #$buttonArchiveScript.Location = New-Object System.Drawing.Point(745, 46)
 $buttonArchiveScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
 $buttonArchiveScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonArchiveScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonArchiveScript.FlatAppearance.BorderSize = 0
 $buttonArchiveScript.BackColor = [System.Drawing.Color]::DarkSlateBlue
 $buttonArchiveScript.ForeColor = [System.Drawing.Color]::White
 $buttonArchiveScript.Add_Click({
@@ -2069,6 +2131,8 @@ $buttonMoveScript.Text = "Move"
 #$buttonMoveScript.Location = New-Object System.Drawing.Point(745, 46)
 $buttonMoveScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
 $buttonMoveScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonMoveScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonMoveScript.FlatAppearance.BorderSize = 0
 $buttonMoveScript.BackColor = [System.Drawing.Color]::MidnightBlue
 $buttonMoveScript.ForeColor = [System.Drawing.Color]::White
 $form.Controls.Add($buttonMoveScript)
@@ -2083,6 +2147,8 @@ $buttonOpenPathScript.Text = "Path"
 #$buttonOpenPathScript.Location = New-Object System.Drawing.Point(745, 46)
 $buttonOpenPathScript.Location = New-Object System.Drawing.Point($newButtonX, $newButtonY)
 $buttonOpenPathScript.Size = New-Object System.Drawing.Size($buttonsize, $buttonHeight)
+$buttonOpenPathScript.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonOpenPathScript.FlatAppearance.BorderSize = 0
 $buttonOpenPathScript.BackColor = [System.Drawing.Color]::Black
 $buttonOpenPathScript.ForeColor = [System.Drawing.Color]::White
 # Open Folder Event Handler
@@ -2113,7 +2179,7 @@ $form.Controls.Add($labelScripts)
 $listBoxScripts = New-Object System.Windows.Forms.ListBox
 $listBoxScripts.Name = "listBoxScripts"
 $listBoxScripts.Location = New-Object System.Drawing.Point(15, 120) # Increase X = Right, Y = Down
-$listBoxScripts.Size = New-Object System.Drawing.Size(320, 355)   # Increase W = Wider, H = Taller.
+$listBoxScripts.Size = New-Object System.Drawing.Size(380, 375)   # Increase W = Wider, H = Taller.
 $listBoxScripts.SelectionMode = "One"
 $listBoxScripts.Font = New-Object System.Drawing.Font("Arial", 10)
 $form.Controls.Add($listBoxScripts)
@@ -2127,10 +2193,13 @@ $form.Controls.Add($listBoxScripts)
 # Commit Script & JSON to GIT Button
 $buttonCommitToGit = New-Object System.Windows.Forms.Button
 $buttonCommitToGit.Text = "Commit Script and JSON to GIT"
-$buttonCommitToGit.Location = New-Object System.Drawing.Point(15, 458)
-$buttonCommitToGit.Size = New-Object System.Drawing.Size(320, 25)
-$buttonCommitToGit.BackColor = [System.Drawing.Color]::Teal
-$buttonCommitToGit.ForeColor = [System.Drawing.Color]::White
+$buttonCommitToGit.Location = New-Object System.Drawing.Point(15, 470)  # Increase X = Right, Y = Down
+$buttonCommitToGit.Size = New-Object System.Drawing.Size(380, 22)       # Increase W = Wider, H = Taller.
+$buttonCommitToGit.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonCommitToGit.FlatAppearance.BorderSize = 1
+$buttonCommitToGit.BackColor = [System.Drawing.Color]::BurlyWood
+$buttonCommitToGit.ForeColor = [System.Drawing.Color]::Black
+$buttonCommitToGit.Font = New-Object System.Drawing.Font("Verdana", 10, [System.Drawing.FontStyle]::Italic)
 
 # Commit Script & JSON to GIT Event Handler
 $buttonCommitToGit.Add_Click({
@@ -2232,15 +2301,15 @@ try {
 # Name Label
 $labelName = New-Object System.Windows.Forms.Label
 $labelName.Text = "Name:"
-$labelName.Location = New-Object System.Drawing.Point(350, 100)   # Increase X = Right, y = Down
+$labelName.Location = New-Object System.Drawing.Point(410, 100)   # Increase X = Right, y = Down
 $labelName.Size = New-Object System.Drawing.Size(100, 20)         # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelName)
 
 # Name Text Box
 $textBoxName = New-Object System.Windows.Forms.TextBox
-$textBoxName.Location = New-Object System.Drawing.Point(450, 100) # Increase X = Right, y = Down
-$textBoxName.Size = New-Object System.Drawing.Size(400, 100)      # Increase W = Wider, H = Taller.
-$textBoxName.Font = New-Object System.Drawing.Font("Agency FB", 14, [System.Drawing.FontStyle]::Bold)
+$textBoxName.Location = New-Object System.Drawing.Point(520, 100) # Increase X = Right, y = Down
+$textBoxName.Size = New-Object System.Drawing.Size(330, 100)      # Increase W = Wider, H = Taller.
+$textBoxName.Font = New-Object System.Drawing.Font("Agency FB", 12, [System.Drawing.FontStyle]::Bold)
 $textBoxName.TextAlign = [System.Windows.Forms.HorizontalAlignment]::Center # Center the text
 $textBoxName.BorderStyle = "None"
 $textBoxName.BackColor = $form.BackColor
@@ -2255,14 +2324,14 @@ $form.Controls.Add($textBoxName)
 # Label Description Label
 $labelDescription = New-Object System.Windows.Forms.Label
 $labelDescription.Text = "Description:"
-$labelDescription.Location = New-Object System.Drawing.Point(350, 140) # Increase X = Right, y = Down
-$labelDescription.Size = New-Object System.Drawing.Size(100, 20)       # Increase W = Wider, H = Taller.
+$labelDescription.Location = New-Object System.Drawing.Point(410, 140) # Increase X = Right, y = Down
+$labelDescription.Size = New-Object System.Drawing.Size(75, 20)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelDescription)
 
 # Label Description TextBox
 $textBoxDescription = New-Object System.Windows.Forms.TextBox
-$textBoxDescription.Location = New-Object System.Drawing.Point(450, 140)
-$textBoxDescription.Size = New-Object System.Drawing.Size(400, 110)
+$textBoxDescription.Location = New-Object System.Drawing.Point(520, 140) # Increase X = Right, y = Down
+$textBoxDescription.Size = New-Object System.Drawing.Size(330, 110)       # Increase W = Wider, H = Taller.
 $textBoxDescription.Multiline = $true
 $textBoxDescription.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
@@ -2334,14 +2403,14 @@ $form.Controls.Add($textBoxDescription)
 # Label Version
 $labelVersion = New-Object System.Windows.Forms.Label
 $labelVersion.Text = "Version:"
-$labelVersion.Location = New-Object System.Drawing.Point(350, 259) # Increase X = Right, y = Down
+$labelVersion.Location = New-Object System.Drawing.Point(410, 259) # Increase X = Right, y = Down
 $labelVersion.Size = New-Object System.Drawing.Size(100, 20)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelVersion)
 
 # TextBox Version
 $textBoxVersion = New-Object System.Windows.Forms.TextBox
-$textBoxVersion.Location = New-Object System.Drawing.Point(450, 259) # Increase X = Right, y = Down
-$textBoxVersion.Size = New-Object System.Drawing.Size(400, 20)       # Increase W = Wider, H = Taller.
+$textBoxVersion.Location = New-Object System.Drawing.Point(520, 259) # Increase X = Right, y = Down
+$textBoxVersion.Size = New-Object System.Drawing.Size(330, 20)       # Increase W = Wider, H = Taller.
 $textBoxVersion.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
@@ -2413,14 +2482,14 @@ $form.Controls.Add($textBoxVersion)
 # Author Label
 $labelAuthor = New-Object System.Windows.Forms.Label
 $labelAuthor.Text = "Author:"
-$labelAuthor.Location = New-Object System.Drawing.Point(350, 289) # Increase X = Right, y = Down
-$labelAuthor.Size = New-Object System.Drawing.Size(100, 20)       # Increase W = Wider, H = Taller.
+$labelAuthor.Location = New-Object System.Drawing.Point(410, 289) # Increase X = Right, y = Down
+$labelAuthor.Size = New-Object System.Drawing.Size(50, 20)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelAuthor)
 
 # Author TextBox
 $textBoxAuthor = New-Object System.Windows.Forms.TextBox
-$textBoxAuthor.Location = New-Object System.Drawing.Point(450, 289) # Increase X = Right, y = Down
-$textBoxAuthor.Size = New-Object System.Drawing.Size(400, 20)       # Increase W = Wider, H = Taller.
+$textBoxAuthor.Location = New-Object System.Drawing.Point(520, 289) # Increase X = Right, y = Down
+$textBoxAuthor.Size = New-Object System.Drawing.Size(330, 20)       # Increase W = Wider, H = Taller.
 $textBoxAuthor.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
@@ -2490,28 +2559,28 @@ $form.Controls.Add($textBoxAuthor)
 # Date Created Label
 $labelDateCreated = New-Object System.Windows.Forms.Label
 $labelDateCreated.Text = "Date Created:"
-$labelDateCreated.Location = New-Object System.Drawing.Point(350, 379) # Adjusted location
+$labelDateCreated.Location = New-Object System.Drawing.Point(410, 379) # Adjusted location
 $labelDateCreated.Size = New-Object System.Drawing.Size(100, 20)
 $form.Controls.Add($labelDateCreated)
 
 # Date Created Textbox
 $textBoxDateCreated = New-Object System.Windows.Forms.TextBox
-$textBoxDateCreated.Location = New-Object System.Drawing.Point(450, 379) # Adjusted location
-$textBoxDateCreated.Size = New-Object System.Drawing.Size(400, 20)
+$textBoxDateCreated.Location = New-Object System.Drawing.Point(520, 379) # Adjusted location
+$textBoxDateCreated.Size = New-Object System.Drawing.Size(330, 20)
 $textBoxDateCreated.ReadOnly = $true
 $form.Controls.Add($textBoxDateCreated)
 
 # Date Modified Label
 $labelDateModified = New-Object System.Windows.Forms.Label
 $labelDateModified.Text = "Date Modified:"
-$labelDateModified.Location = New-Object System.Drawing.Point(350, 349) # Increase X = Right, y = Down
+$labelDateModified.Location = New-Object System.Drawing.Point(410, 349) # Increase X = Right, y = Down
 $labelDateModified.Size = New-Object System.Drawing.Size(100, 20)      # Increase W for wider, H for taller
 $form.Controls.Add($labelDateModified)
 
 # Date Modified TextBox
 $textBoxDateModified = New-Object System.Windows.Forms.TextBox
-$textBoxDateModified.Location = New-Object System.Drawing.Point(450, 349) # Increase X = Right, y = Down
-$textBoxDateModified.Size = New-Object System.Drawing.Size(400, 20)      # Same size as author and created.
+$textBoxDateModified.Location = New-Object System.Drawing.Point(520, 349) # Increase X = Right, y = Down
+$textBoxDateModified.Size = New-Object System.Drawing.Size(330, 20)      # Same size as author and created.
 #$textBoxDateModified.BackColor = [System.Drawing.Color]::White
 $textBoxDateModified.ReadOnly = $true
 $form.Controls.Add($textBoxDateModified)
@@ -2519,14 +2588,14 @@ $form.Controls.Add($textBoxDateModified)
 # Modified By Label
 $labelModifiedBy = New-Object System.Windows.Forms.Label
 $labelModifiedBy.Text = "Modified By:"
-$labelModifiedBy.Location = New-Object System.Drawing.Point(350, 319) # Adjusted location
+$labelModifiedBy.Location = New-Object System.Drawing.Point(410, 319) # Adjusted location
 $labelModifiedBy.Size = New-Object System.Drawing.Size(100, 20)
 $form.Controls.Add($labelModifiedBy)
 
 # Modified By TextBox
 $textBoxModifiedBy = New-Object System.Windows.Forms.TextBox
-$textBoxModifiedBy.Location = New-Object System.Drawing.Point(450, 319) # Adjusted location
-$textBoxModifiedBy.Size = New-Object System.Drawing.Size(400, 20)
+$textBoxModifiedBy.Location = New-Object System.Drawing.Point(520, 319) # Adjusted location
+$textBoxModifiedBy.Size = New-Object System.Drawing.Size(330, 20)
 $textBoxModifiedBy.BackColor = [System.Drawing.Color]::White
 $textBoxModifiedBy.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
@@ -2590,7 +2659,6 @@ $textBoxModifiedBy.Add_Leave({
 })
 $form.Controls.Add($textBoxModifiedBy)
 
-# Get highest version from Modification Log
 function Get-HighestVersionFromModifications {
     param (
         [array]$modifications,
@@ -2601,19 +2669,20 @@ function Get-HighestVersionFromModifications {
     Write-Host "JSON path received: $jsonPath"
     Write-Host "Number of modifications received: $($modifications.Count)"
 
-    $versions = $modifications | ForEach-Object { $_.Version }
-    $highestVersion = [version]($versions | Sort-Object -Descending | Select-Object -First 1)
-    
-    # Read the JSON content
-    $jsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
-    
-    # Update the version in the JSON content
-    $jsonContent.Version = $highestVersion.ToString()
-    
-    # Save the updated JSON content back to the file
-    $jsonContent | ConvertTo-Json -Depth 4 | Out-File -FilePath $jsonPath -Encoding UTF8
-    
-    return $highestVersion, $jsonContent
+    $versions = @()
+    if ($null -ne $modifications) {
+        $versions = $modifications | ForEach-Object { $_.Version }
+    }
+    Write-Host "[Source:Get-HighestVersionFromModifications]Versions extracted: $($versions -join ', ')"
+
+    $highestVersion = "0.1" # Default value
+    if ($versions.Count -gt 0) {
+        $highestVersion = [version]($versions | Sort-Object -Descending | Select-Object -First 1)
+    }
+
+    Write-Host "Version after casting: $($highestVersion.ToString()), type: $($highestVersion.GetType().FullName)"
+
+    return $highestVersion
 }
 
 # Function to set up the DataGridView event handler for CellContentClick
@@ -2737,13 +2806,15 @@ function ShowBlankModificationLogForm {
     # Create the form and ListView
     $modLogForm = New-Object System.Windows.Forms.Form
     $modLogForm.Text = "Modification Log"
-    $modLogForm.Size = New-Object System.Drawing.Size(820, 640)  # Increase W for wider, H for taller
+    $modLogForm.Size = New-Object System.Drawing.Size(820, 1000)  # Increase W for wider, H for taller
     $modLogForm.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+    $modLogForm.BackColor = [System.Drawing.Color]::SaddleBrown
+    $modLogForm.ForeColor = [System.Drawing.Color]::White
 
     # Table View
     $tableView = New-Object System.Windows.Forms.DataGridView
     $tableView.Location = New-Object System.Drawing.Point(20, 20) # Increase X = Right, y = Down
-    $tableView.Size = New-Object System.Drawing.Size(760, 400)  # Increase W for wider, H for taller
+    $tableView.Size = New-Object System.Drawing.Size(760, 800)  # Increase W for wider, H for taller
     $tableView.ColumnHeadersVisible = $true
     $tableView.RowHeadersVisible = $false
     $tableView.AutoSizeColumnsMode = [System.Windows.Forms.DataGridViewAutoSizeColumnsMode]::Fill
@@ -2752,6 +2823,12 @@ function ShowBlankModificationLogForm {
     $tableView.AllowUserToDeleteRows = $false
     $tableView.AllowUserToResizeRows = $false
     $tableView.MultiSelect = $false
+    $tableView.BackgroundColor = [System.Drawing.Color]::BurlyWood
+    $tableView.GridColor = [System.Drawing.Color]::Navy
+    $tableView.ColumnHeadersDefaultCellStyle.ForeColor = [System.Drawing.Color]::Red
+    $tableView.DefaultCellStyle.ForeColor = [System.Drawing.Color]::SaddleBrown
+    #$tableviewfont = New-Object System.Drawing.Font("Arial", 12, [System.Drawing.FontStyle]::Bold)
+    #$tableViewfont.DefaultCellStyle.Font = $font
 
     # Create "Delete" button column
     $deleteColumn = New-Object System.Windows.Forms.DataGridViewButtonColumn
@@ -2783,15 +2860,17 @@ function ShowBlankModificationLogForm {
     $versionColumn = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
     $versionColumn.Name = "Version"
     $versionColumn.HeaderText = "Version"
-    $versionColumn.AutoSizeMode = [System.Windows.Forms.DataGridViewAutoSizeColumnMode]::AllCells
-    $versionColumn.DefaultCellStyle.WrapMode = [System.Windows.Forms.DataGridViewTriState]::True
+    $versionColumn.Width = 50
+    $versionColumn.AutoSizeMode = [System.Windows.Forms.DataGridViewAutoSizeColumnMode]::None
+    $versionColumn.DefaultCellStyle.WrapMode = [System.Windows.Forms.DataGridViewTriState]::False
     $versionColumn.DefaultCellStyle.Alignment = [System.Windows.Forms.DataGridViewContentAlignment]::MiddleRight
     $tableView.Columns.Add($versionColumn)
 
     $modifiedByColumn = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
     $modifiedByColumn.Name = "ModifiedBy"
     $modifiedByColumn.HeaderText = "Modified By"
-    $modifiedByColumn.AutoSizeMode = [System.Windows.Forms.DataGridViewAutoSizeColumnMode]::AllCells
+    $modifiedByColumn.AutoSizeMode = [System.Windows.Forms.DataGridViewAutoSizeColumnMode]::None
+    $modifiedByColumn.Width = 60
     $tableView.Columns.Add($modifiedByColumn)
 
     $modificationColumn = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
@@ -2834,14 +2913,14 @@ function ShowBlankModificationLogForm {
     # Label and TextBox for "Modified Date"
     $labelModifiedDate = New-Object System.Windows.Forms.Label
     $labelModifiedDate.Text = "Modified Date:"
-    $labelModifiedDate.Location = New-Object System.Drawing.Point(20, 430) # Adjust coordinates as needed
+    $labelModifiedDate.Location = New-Object System.Drawing.Point(20, 840) # Adjust coordinates as needed
     $labelModifiedDate.Size = New-Object System.Drawing.Size(100, 20)
     $modLogForm.Controls.Add($labelModifiedDate)
 
     # TextBox for "Modified Date Text"
     $textBoxModifiedDate = New-Object System.Windows.Forms.TextBox
-    $textBoxModifiedDate.Location = New-Object System.Drawing.Point(140, 430) # Adjust coordinates as needed
-    $textBoxModifiedDate.Size = New-Object System.Drawing.Size(220, 20) # Increase width for longer date format
+    $textBoxModifiedDate.Location = New-Object System.Drawing.Point(140, 840) # Adjust coordinates as needed
+    $textBoxModifiedDate.Size = New-Object System.Drawing.Size(280, 20) # Increase width for longer date format
     $textBoxModifiedDate.BackColor = [System.Drawing.Color]::White
     $textBoxModifiedDate.Text = Get-Date -Format "MMMM d, yyyy 'at' h:mm tt" # Prepopulate with current date and time
     $modLogForm.Controls.Add($textBoxModifiedDate)
@@ -2849,13 +2928,13 @@ function ShowBlankModificationLogForm {
     # Label and TextBox for "Modified By"
     $labelAddModifiedBy = New-Object System.Windows.Forms.Label
     $labelAddModifiedBy.Text = "Modified By:"
-    $labelAddModifiedBy.Location = New-Object System.Drawing.Point(380, 430) # Move right for additional field
-    $labelAddModifiedBy.Size = New-Object System.Drawing.Size(100, 20)
+    $labelAddModifiedBy.Location = New-Object System.Drawing.Point(425, 845) # Move right for additional field
+    $labelAddModifiedBy.Size = New-Object System.Drawing.Size(70, 20)
     $modLogForm.Controls.Add($labelAddModifiedBy)
 
     $textBoxAddModifiedBy = New-Object System.Windows.Forms.TextBox
-    $textBoxAddModifiedBy.Location = New-Object System.Drawing.Point(500, 430) # Move right for additional field
-    $textBoxAddModifiedBy.Size = New-Object System.Drawing.Size(100, 20) # Adjust width as needed
+    $textBoxAddModifiedBy.Location = New-Object System.Drawing.Point(500, 840) # Move right for additional field
+    $textBoxAddModifiedBy.Size = New-Object System.Drawing.Size(280, 20) # Adjust width as needed
     $textBoxAddModifiedBy.BackColor = [System.Drawing.Color]::White
     $textBoxAddModifiedBy.Text = $env:USERNAME.ToUpper() # Prepopulate with the current user in uppercase
     $modLogForm.Controls.Add($textBoxAddModifiedBy)
@@ -2863,7 +2942,7 @@ function ShowBlankModificationLogForm {
     # Label for "Modification"
     $labelModification = New-Object System.Windows.Forms.Label
     $labelModification.Text = "Modification:"
-    $labelModification.Location = New-Object System.Drawing.Point(20, 460) # Move down for additional field
+    $labelModification.Location = New-Object System.Drawing.Point(20, 870) # Move down for additional field
     $labelModification.Size = New-Object System.Drawing.Size(100, 20)
     $modLogForm.Controls.Add($labelModification)
 
@@ -2871,7 +2950,7 @@ function ShowBlankModificationLogForm {
     $textBoxAddModificationText = New-Object System.Windows.Forms.TextBox
     $textBoxAddModificationText.Multiline = $true # Allow multiple lines
     $textBoxAddModificationText.ScrollBars = "Vertical" # Show vertical scroll bar for long text
-    $textBoxAddModificationText.Location = New-Object System.Drawing.Point(140, 460) # Move down for additional field
+    $textBoxAddModificationText.Location = New-Object System.Drawing.Point(140, 870) # Move down for additional field
     $textBoxAddModificationText.Size = New-Object System.Drawing.Size(640, 80) # Adjust height and width as needed
     $textBoxAddModificationText.BackColor = [System.Drawing.Color]::White
     $modLogForm.Controls.Add($textBoxAddModificationText)
@@ -2879,7 +2958,7 @@ function ShowBlankModificationLogForm {
     # Create "Add Modification" button
     $buttonSaveModification = New-Object System.Windows.Forms.Button
     $buttonSaveModification.Text = "Add Modification" # Change button text
-    $buttonSaveModification.Location = New-Object System.Drawing.Point(15, 560) # Move down for additional field
+    $buttonSaveModification.Location = New-Object System.Drawing.Point(15, 920) # Move down for additional field
     $buttonSaveModification.Size = New-Object System.Drawing.Size(120, 30) # Adjust width as needed
     $buttonSaveModification.BackColor = [System.Drawing.Color]::DodgerBlue  # Set the background color of the button
     $buttonSaveModification.ForeColor = [System.Drawing.Color]::White      # Set the text color of the button
@@ -2993,13 +3072,13 @@ function ShowAddModificationForm {
     # Label and TextBox for "Version"
     $labelAddVersion = New-Object System.Windows.Forms.Label
     $labelAddVersion.Text = "Version:"
-    $labelAddVersion.Location = New-Object System.Drawing.Point(20, 20) # Adjust coordinates as needed
-    $labelAddVersion.Size = New-Object System.Drawing.Size(100, 20)
+    $labelAddVersion.Location = New-Object System.Drawing.Point(20, 20) # Increase X = Right, y = Down
+    $labelAddVersion.Size = New-Object System.Drawing.Size(80, 20) # Increase W = Wider, H = Taller.
     $addModForm.Controls.Add($labelAddVersion)
 
     $textBoxAddVersion = New-Object System.Windows.Forms.TextBox
-    $textBoxAddVersion.Location = New-Object System.Drawing.Point(140, 20) # Adjust coordinates as needed
-    $textBoxAddVersion.Size = New-Object System.Drawing.Size(220, 20) # Adjust size as needed
+    $textBoxAddVersion.Location = New-Object System.Drawing.Point(140, 20) # Increase X = Right, y = Down
+    $textBoxAddVersion.Size = New-Object System.Drawing.Size(220, 20) # Increase W = Wider, H = Taller.
     $textBoxAddVersion.BackColor = [System.Drawing.Color]::White
     $textBoxAddVersion.Text = $jsonContent.Version  # Prepopulate with the current version from JSON content
     $textBoxAddVersion.Enabled = $false # Disable editing of the version field
@@ -3008,13 +3087,13 @@ function ShowAddModificationForm {
     # Label and TextBox for "Modified By"
     $labelAddModifiedBy = New-Object System.Windows.Forms.Label
     $labelAddModifiedBy.Text = "Modified By:"
-    $labelAddModifiedBy.Location = New-Object System.Drawing.Point(20, 50) # Adjust coordinates as needed
+    $labelAddModifiedBy.Location = New-Object System.Drawing.Point(20, 50) # Increase X = Right, y = Down
     $labelAddModifiedBy.Size = New-Object System.Drawing.Size(100, 20)      # Increase W for wider, H for taller
     $addModForm.Controls.Add($labelAddModifiedBy)
 
     $textBoxAddModifiedBy = New-Object System.Windows.Forms.TextBox
-    $textBoxAddModifiedBy.Location = New-Object System.Drawing.Point(140, 50) # Adjust coordinates as needed
-    $textBoxAddModifiedBy.Size = New-Object System.Drawing.Size(220, 20)      # Adjust size as needed
+    $textBoxAddModifiedBy.Location = New-Object System.Drawing.Point(140, 50) # Increase X = Right, y = Down
+    $textBoxAddModifiedBy.Size = New-Object System.Drawing.Size(220, 20)      # Increase W = Wider, H = Taller.
     $textBoxAddModifiedBy.BackColor = [System.Drawing.Color]::White
     $textBoxAddModifiedBy.Text = $env:USERNAME.ToUpper()  # Populate with the current user's name
     $addModForm.Controls.Add($textBoxAddModifiedBy)
@@ -3022,20 +3101,20 @@ function ShowAddModificationForm {
     # Label and TextBox for "Modification Text"
     $labelAddModificationText = New-Object System.Windows.Forms.Label
     $labelAddModificationText.Text = "Modification Text:"
-    $labelAddModificationText.Location = New-Object System.Drawing.Point(20, 80) # Adjust coordinates as needed
+    $labelAddModificationText.Location = New-Object System.Drawing.Point(20, 80) # Increase X = Right, y = Down
     $labelAddModificationText.Size = New-Object System.Drawing.Size(100, 20)      # Increase W for wider, H for taller
     $addModForm.Controls.Add($labelAddModificationText)
 
     $textBoxAddModificationText = New-Object System.Windows.Forms.TextBox
-    $textBoxAddModificationText.Location = New-Object System.Drawing.Point(140, 80) # Adjust coordinates as needed
-    $textBoxAddModificationText.Size = New-Object System.Drawing.Size(220, 180)      # Adjust size as needed
+    $textBoxAddModificationText.Location = New-Object System.Drawing.Point(140, 80)# Increase X = Right, y = Down
+    $textBoxAddModificationText.Size = New-Object System.Drawing.Size(220, 180)      # Increase W = Wider, H = Taller.
     $textBoxAddModificationText.BackColor = [System.Drawing.Color]::White
     $addModForm.Controls.Add($textBoxAddModificationText)
 
     # Create "Save" button for saving the new modification
     $buttonSaveModification = New-Object System.Windows.Forms.Button
     $buttonSaveModification.Text = "Save"
-    $buttonSaveModification.Location = New-Object System.Drawing.Point(200, 260)  # Adjust coordinates as needed
+    $buttonSaveModification.Location = New-Object System.Drawing.Point(200, 260)  # Increase X = Right, y = Down
     $buttonSaveModification.Size = New-Object System.Drawing.Size(100, 30)        # Increase W = Wider, H = Taller.
     
     # Save Modifications Event Handler
@@ -3172,8 +3251,8 @@ function ShowModificationLog {
 # Create Modification Log button
 $buttonModificationLog = New-Object System.Windows.Forms.Button
 $buttonModificationLog.Text = "View Modification Log"
-$buttonModificationLog.Location = New-Object System.Drawing.Point(455, 495)  # Increase X = Right, Y = Down
-$buttonModificationLog.Size = New-Object System.Drawing.Size(195, 31)        # Increase W = Wider, H = Taller.
+$buttonModificationLog.Location = New-Object System.Drawing.Point(500, 495)  # Increase X = Right, Y = Down
+$buttonModificationLog.Size = New-Object System.Drawing.Size(180, 30)        # Increase W = Wider, H = Taller.
 $buttonModificationLog.BackColor = [System.Drawing.Color]::SaddleBrown
 $buttonModificationLog.ForeColor = [System.Drawing.Color]::White
 $buttonModificationLog.Add_Click({ ShowModificationLog })
@@ -3182,8 +3261,8 @@ $form.Controls.Add($buttonModificationLog)
 # Create View To-Do List button
 $buttonViewToDoList = New-Object System.Windows.Forms.Button
 $buttonViewToDoList.Text = "View To-Do List"
-$buttonViewToDoList.Location = New-Object System.Drawing.Point(655, 495)  # Adjust the location
-$buttonViewToDoList.Size = New-Object System.Drawing.Size(195, 31)        # Adjust the size
+$buttonViewToDoList.Location = New-Object System.Drawing.Point(672, 495)  # Adjust the location
+$buttonViewToDoList.Size = New-Object System.Drawing.Size(180, 30)        # Adjust the size
 $buttonViewToDoList.BackColor = [System.Drawing.Color]::SaddleBrown
 $buttonViewToDoList.ForeColor = [System.Drawing.Color]::White  # Set text color
 $buttonViewToDoList.Add_Click({ ShowToDoList })
@@ -3193,14 +3272,14 @@ $form.Controls.Add($buttonViewToDoList)
 # JSON File Label
 $labelJsonFile = New-Object System.Windows.Forms.Label
 $labelJsonFile.Text = "JSON File:"
-$labelJsonFile.Location = New-Object System.Drawing.Point(350, 410) # Increase X = Right, y = Down
+$labelJsonFile.Location = New-Object System.Drawing.Point(410, 410) # Increase X = Right, y = Down
 $labelJsonFile.Size = New-Object System.Drawing.Size(100, 20)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelJsonFile)
 
 # JSON File Textbox
 $textBoxJsonFile = New-Object System.Windows.Forms.TextBox
-$textBoxJsonFile.Location = New-Object System.Drawing.Point(450, 410) # Increase X = Right, y = Down
-$textBoxJsonFile.Size = New-Object System.Drawing.Size(400, 20)       # Increase W = Wider, H = Taller.
+$textBoxJsonFile.Location = New-Object System.Drawing.Point(520, 410) # Increase X = Right, y = Down
+$textBoxJsonFile.Size = New-Object System.Drawing.Size(330, 20)       # Increase W = Wider, H = Taller.
 $textBoxJsonFile.CharacterCasing = "Upper"
 #$textBoxJsonFile.BackColor = [System.Drawing.Color]::Pink
 $textBoxJsonFile.ReadOnly = $true
@@ -3209,7 +3288,7 @@ $form.Controls.Add($textBoxJsonFile)
 # Open JSON Button
 $buttonOpenJson = New-Object System.Windows.Forms.Button
 $buttonOpenJson.Text = "OPEN"
-$buttonOpenJson.Location = New-Object System.Drawing.Point(450, 432) # Increase X = Right, Y = Down
+$buttonOpenJson.Location = New-Object System.Drawing.Point(520, 432) # Increase X = Right, Y = Down
 $buttonOpenJson.Size = New-Object System.Drawing.Size(60, 22)       # Increase W = Wider, H = Taller.
 $buttonOpenJson.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $buttonOpenJson.FlatAppearance.BorderSize = 0
@@ -3256,8 +3335,8 @@ $form.Controls.Add($buttonOpenJson)
 
 # Delete JSON Button
 $buttonDeleteJson = New-Object System.Windows.Forms.Button
-$buttonDeleteJson.Text = "DELETE JSON"
-$buttonDeleteJson.Location = New-Object System.Drawing.Point(510, 432) # Increase X = Right, y = Down
+$buttonDeleteJson.Text = "DELETE"
+$buttonDeleteJson.Location = New-Object System.Drawing.Point(580, 432) # Increase X = Right, y = Down
 $buttonDeleteJson.Size = New-Object System.Drawing.Size(60, 22)       # Increase W = Wider, H = Taller.
 $buttonDeleteJson.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $buttonDeleteJson.FlatAppearance.BorderSize = 0
@@ -3435,9 +3514,20 @@ $listBoxScriptTags.Add_SelectedIndexChanged({
     }
 })
 
+# abc Start here with Select Script Actions
 $listBoxScripts.Add_SelectedIndexChanged({
     PopulateFieldsAndTags
+    $selectedScript = $listBoxScripts.SelectedItem.ToString()
+    $scriptPath = Get-ScriptFilePath -scriptName $selectedScript
+    $jsonPath = Get-JsonFilePath -scriptName $selectedScript
+    #Write-Host "Selected Script: $selectedScript"
+    #Write-Host "Script Path: $scriptPath"
+    #Write-Host "JSON Path: $jsonPath"
+    # Commenting out the update logic for now
+    $jsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
+    $jsonContent = UpdateJsonContent -jsonContent $jsonContent -selectedScript $selectedScript -scriptPath $scriptPath -jsonPath $jsonPath
 })
+
 
 $form.Controls.Add($listBoxScripts)
 

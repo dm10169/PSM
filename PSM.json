@@ -1,79 +1,20 @@
 ﻿{
-    "Name":  "PSM",
-    "Author":  "CJDOVE - ChatGPT",
-    "Description":  "PSM Master Script in Development",
-    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
     "ScriptPath":  "C:\\SCRIPTS\\PSM.ps1",
-    "Version":  "1.0",
-    "ModifiedBy":  "CJDOVE - ChatGPT",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
+    "Name":  "PSM",
+    "Author":  "CURTI",
+    "Description":  "Please update this description",
+    "Version":  "0.1",
     "Tags":  [
-                 "🔨 Broken",
-                 "👩‍💻 Development",
-                 "⭐ Favorite",
-                 "🚧 Fixing",
-                 "🏴 Mine",
                  "📜 PowerShell"
              ],
+    "ModifiedBy":  "CURTI",
     "Modifications":  [
                           {
-                              "Date":  "August 9, 2023 at 12:36 PM",
-                              "Modification":  "1",
-                              "ModifiedBy":  "CJDOVE",
+                              "Date":  "August 11, 2023 at 11:14 PM",
+                              "Modification":  "Default script created.",
+                              "ModifiedBy":  "CURTI",
                               "Version":  "0.1"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 12:36 PM",
-                              "Modification":  "2",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.2"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 1:05 PM",
-                              "Modification":  "3",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.3"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 1:10 PM",
-                              "Modification":  "4",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.4"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:01 PM",
-                              "Modification":  "5",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.5"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:18 PM",
-                              "Modification":  "6",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.6"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:22 PM",
-                              "Modification":  "7",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.7"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:23 PM",
-                              "Modification":  "UPDATED FORM TO DYNAMIMC VERSION CONTROL",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.8"
-                          },
-                          {
-                              "Date":  "August 10, 2023 at 12:14 AM",
-                              "Modification":  "9",
-                              "ModifiedBy":  "CURTI",
-                              "Version":  "0.9"
-                          },
-                          {
-                              "Date":  "August 10, 2023 at 12:25 AM",
-                              "Modification":  "TEST",
-                              "ModifiedBy":  "CURTI",
-                              "Version":  "1.0"
                           }
                       ],
     "ToDoList":  [
@@ -81,7 +22,7 @@
                          "Status":  "NotStarted",
                          "Title":  "Review Script",
                          "Task":  "Review Script for errors and Update!",
-                         "DateCompleted":  "August 11, 2023 at 10:51 PM",
+                         "DateCompleted":  "August 11, 2023 at 11:14 PM",
                          "CompletedBy":  ""
                      }
                  ]

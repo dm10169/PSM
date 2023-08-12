@@ -1,0 +1,50 @@
+﻿{
+    "Name":  "PSM-BACKUP-1031PM",
+    "Author":  "CJDOVE - ChatGPT",
+    "Description":  "BACKED UP RIGHT BEFORE STARTED FIXING JSON FILES ON SELECTION",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM-BACKUP-1031PM.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM-BACKUP-1031PM.ps1",
+    "Version":  "0.3",
+    "ModifiedBy":  "CJDOVE - ChatGPT",
+    "Tags":  [
+                 "🔨 Broken",
+                 "👩‍💻 Development",
+                 "🚧 Fixing",
+                 "🏴 Mine",
+                 "📜 PowerShell"
+             ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 3:35 PM",
+                              "Modification":  "FIXED RENAME EVENT TO UPDATE MODIFICATION LOG",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 5:17 PM",
+                              "Modification":  "UPDATED A WHOLE LOT OF SHIT WITH HIGHESTVERSION",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.2"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 8:52 PM",
+                              "Modification":  "ABOUT THE INCREASE THE SIZE OF THE FORM AND CHANGE THE DESIGN PRIOR TO IMPLEMENTING KEYWORDS",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.3"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 10:31 PM",
+                              "Modification":  "Renamed Script and JSON from PSM_COPY to PSM-BACKUP-1031PM",
+                              "ModifiedBy":  "PSM-BACKUP-1031PM"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "",
+                         "DateCompleted":  "",
+                         "Task":  "",
+                         "Status":  "NotStarted",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

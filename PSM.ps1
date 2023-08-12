@@ -2870,7 +2870,6 @@ $buttonCommitToGit.Font = New-Object System.Drawing.Font("Verdana", 10, [System.
 
 # Commit Script & JSON to GIT Event Handler
 $buttonCommitToGit.Add_Click({
-    Clear-Host
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
         $scriptPathWithoutExtension = Join-Path -Path $textBoxScriptsPath.Text -ChildPath $selectedScript
@@ -2890,31 +2889,23 @@ $buttonCommitToGit.Add_Click({
         $gitRepoPath = $global:BaseScriptPath
         Set-Location -Path $gitRepoPath
 
-           # Initialize the Git repository if it does not exist
+        # Initialize the Git repository if it does not exist
         if (-not (Test-Path -Path (Join-Path -Path $gitRepoPath -ChildPath ".git"))) {
             git init
         }
 
-        # Set the remote repository if not already set
+                # Set the remote repository if not already set
         $remoteUrl = "https://github.com/dm10169/PSM.git"
-        $existingRemote = git remote | Where-Object { $_ -eq "origin" }
-        if (-not $existingRemote) {
-            git remote add origin $remoteUrl
-        }
+        git remote add origin $remoteUrl -m "master"
 
         # Fetch the latest changes from the remote repository
         git fetch origin
 
         # Ensure the repository is checked out to the master branch
-        $currentBranch = git rev-parse --abbrev-ref HEAD
-        if ($currentBranch -ne "master") {
-            git checkout master
-        }
+        git checkout master
 
         # Add the specific files to the staging area
-        git add (Resolve-Path $scriptPath)
-        git add (Resolve-Path $jsonPath)
-
+        git add -A -- $scriptPath $jsonPath
 
         # Commit the changes
         $commitMessage = "Committed script $selectedScript and its JSON file"
