@@ -1,0 +1,29 @@
+﻿{
+    "ScriptJson":  "C:\\SCRIPTS\\TEST.json",
+    "Description":  "New Script TEST",
+    "ScriptPath":  "C:\\SCRIPTS\\TEST.ps1",
+    "Version":  "0.1",
+    "ModifiedBy":  "CURTI",
+    "Tags":  [
+                 "📜 PowerShell"
+             ],
+    "Author":  "curti",
+    "Name":  "TEST",
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 5:26 PM",
+                              "Modification":  "Created TEST a JSON Buddy",
+                              "Version":  "0.1",
+                              "ModifiedBy":  "CURTI"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 11, 2023 at 5:26 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

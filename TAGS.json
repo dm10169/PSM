@@ -1,0 +1,41 @@
+﻿{
+    "ScriptPath":  "C:\\SCRIPTS\\TAGS.ps1",
+    "ScriptJson":  "C:\\SCRIPTS\\TAGS.json",
+    "Name":  "TAGS",
+    "Author":  "CURTI",
+    "Description":  "Please update this description",
+    "Version":  "0.3",
+    "Tags":  [
+                 "📜 PowerShell"
+             ],
+    "ModifiedBy":  "CURTI",
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 5:15 PM",
+                              "Modification":  "TEST",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 5:15 PM",
+                              "Modification":  "TEST",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.2"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 5:15 PM",
+                              "Modification":  "TEST",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.3"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 11, 2023 at 4:55 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

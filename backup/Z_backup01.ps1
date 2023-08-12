@@ -1,0 +1,1 @@
+﻿Write-Host "Just an empty script used for testing the JSON Updates" -ForegroundColor Green

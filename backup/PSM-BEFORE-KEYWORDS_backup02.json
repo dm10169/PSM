@@ -1,0 +1,97 @@
+﻿{
+    "Name":  "PSM-BEFORE-KEYWORDS",
+    "Author":  "CJDOVE - ChatGPT",
+    "Description":  "PSM Master Script in Development",
+    "ScriptJson":  "C:\\CURTIS\\PSM\\PSM.json",
+    "ScriptPath":  "C:\\CURTIS\\PSM\\PSM.ps1",
+    "Version":  "1.1",
+    "ModifiedBy":  "CJDOVE - ChatGPT",
+    "Tags":  [
+                 "🔨 Broken",
+                 "👩‍💻 Development",
+                 "🚧 Fixing",
+                 "🏴 Mine"
+             ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 9, 2023 at 12:36 PM",
+                              "Modification":  "1",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.1"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 12:36 PM",
+                              "Modification":  "2",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.2"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 1:05 PM",
+                              "Modification":  "3",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.3"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 1:10 PM",
+                              "Modification":  "4",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.4"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 2:01 PM",
+                              "Modification":  "5",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.5"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 2:18 PM",
+                              "Modification":  "6",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.6"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 2:22 PM",
+                              "Modification":  "7",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.7"
+                          },
+                          {
+                              "Date":  "August 9, 2023 at 2:23 PM",
+                              "Modification":  "UPDATED FORM TO DYNAMIMC VERSION CONTROL",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.8"
+                          },
+                          {
+                              "Date":  "August 10, 2023 at 12:14 AM",
+                              "Modification":  "9",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.9"
+                          },
+                          {
+                              "Date":  "August 10, 2023 at 2:56 PM",
+                              "Modification":  "TEST3",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "1.0"
+                          },
+                          {
+                              "Date":  "August 10, 2023 at 2:56 PM",
+                              "Modification":  "TEST4",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "1.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 3:53 AM",
+                              "Modification":  "Renamed Script and JSON from PSM-TODO-01_COPY to PSM-BEFORE-KEYWORDS",
+                              "ModifiedBy":  "PSM-BEFORE-KEYWORDS"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "CLEAR MODIFICAITONS",
+                         "DateCompleted":  "",
+                         "Task":  "ADD AN ABILITY TO CLEAR MODIFICATIONS UNDER THE MODIFICATIONS LOG",
+                         "Status":  1,
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

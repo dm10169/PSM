@@ -1,0 +1,39 @@
+﻿{
+    "Name":  "PSM",
+    "Author":  "CJDOVE - ChatGPT",
+    "Description":  "BACKED UP RIGHT BEFORE STARTED FIXING JSON FILES ON SELECTION",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM.ps1",
+    "Version":  "0.2",
+    "ModifiedBy":  "CJDOVE - ChatGPT",
+    "Tags":  [
+                 "🔨 Broken",
+                 "👩‍💻 Development",
+                 "🚧 Fixing",
+                 "🏴 Mine",
+                 "📜 PowerShell"
+             ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 3:35 PM",
+                              "Modification":  "FIXED RENAME EVENT TO UPDATE MODIFICATION LOG",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 5:17 PM",
+                              "Modification":  "UPDATED A WHOLE LOT OF SHIT WITH HIGHESTVERSION",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.2"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "",
+                         "DateCompleted":  "",
+                         "Task":  "",
+                         "Status":  "NotStarted",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

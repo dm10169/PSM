@@ -1,0 +1,33 @@
+﻿{
+    "Name":  "PSM",
+    "Author":  "CJDOVE - ChatGPT",
+    "Description":  "PSM Master Script in Development",
+    "ScriptJson":  "C:\\CURTIS\\PSM\\PSM.json",
+    "ScriptPath":  "C:\\CURTIS\\PSM\\PSM.ps1",
+    "Version":  "0.1",
+    "ModifiedBy":  "CJDOVE - ChatGPT",
+    "Tags":  [
+                 "🔨 Broken",
+                 "👩‍💻 Development",
+                 "🚧 Fixing",
+                 "🏴 Mine",
+                 "📜 PowerShell"
+             ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 3:35 PM",
+                              "Modification":  "FIXED RENAME EVENT TO UPDATE MODIFICATION LOG",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.1"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "",
+                         "DateCompleted":  "",
+                         "Task":  "",
+                         "Status":  "NotStarted",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

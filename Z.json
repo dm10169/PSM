@@ -1,0 +1,29 @@
+﻿{
+    "ScriptJson":  "C:\\SCRIPTS\\Z.json",
+    "Description":  "New Script Z",
+    "ScriptPath":  "C:\\SCRIPTS\\Z.ps1",
+    "Version":  "0.1",
+    "ModifiedBy":  "CURTI",
+    "Tags":  [
+                 "📜 PowerShell"
+             ],
+    "Author":  "curti",
+    "Name":  "Z",
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 4:34 PM",
+                              "Modification":  "Created Z a JSON Buddy",
+                              "Version":  "0.1",
+                              "ModifiedBy":  "CURTI"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 11, 2023 at 4:34 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}
