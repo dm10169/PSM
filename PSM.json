@@ -2,8 +2,8 @@
     "Name":  "PSM",
     "Author":  "CJDOVE - ChatGPT",
     "Description":  "PSM Master Script in Development",
-    "ScriptJson":  "C:\\CURTIS\\PSM\\PSM.json",
-    "ScriptPath":  "C:\\CURTIS\\PSM\\PSM.ps1",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM.ps1",
     "Version":  "1.0",
     "ModifiedBy":  "CJDOVE - ChatGPT",
     "Tags":  [
@@ -75,5 +75,14 @@
                               "ModifiedBy":  "CURTI",
                               "Version":  "1.0"
                           }
-                      ]
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 11, 2023 at 10:51 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
 }
