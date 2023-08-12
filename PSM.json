@@ -1,79 +1,45 @@
 ﻿{
     "Name":  "PSM",
     "Author":  "CJDOVE - ChatGPT",
-    "Description":  "PSM Master Script in Development",
-    "ScriptJson":  "C:\\CURTIS\\PSM\\PSM.json",
-    "ScriptPath":  "C:\\CURTIS\\PSM\\PSM.ps1",
-    "Version":  "1.0",
+    "Description":  "BACKED UP RIGHT BEFORE STARTED FIXING JSON FILES ON SELECTION",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM.ps1",
+    "Version":  "0.3",
     "ModifiedBy":  "CJDOVE - ChatGPT",
     "Tags":  [
                  "🔨 Broken",
                  "👩‍💻 Development",
-                 "⭐ Favorite",
                  "🚧 Fixing",
                  "🏴 Mine",
                  "📜 PowerShell"
              ],
     "Modifications":  [
                           {
-                              "Date":  "August 9, 2023 at 12:36 PM",
-                              "Modification":  "1",
-                              "ModifiedBy":  "CJDOVE",
+                              "Date":  "August 11, 2023 at 3:35 PM",
+                              "Modification":  "FIXED RENAME EVENT TO UPDATE MODIFICATION LOG",
+                              "ModifiedBy":  "CURTI",
                               "Version":  "0.1"
                           },
                           {
-                              "Date":  "August 9, 2023 at 12:36 PM",
-                              "Modification":  "2",
-                              "ModifiedBy":  "CJDOVE",
+                              "Date":  "August 11, 2023 at 5:17 PM",
+                              "Modification":  "UPDATED A WHOLE LOT OF SHIT WITH HIGHESTVERSION",
+                              "ModifiedBy":  "CURTI",
                               "Version":  "0.2"
                           },
                           {
-                              "Date":  "August 9, 2023 at 1:05 PM",
-                              "Modification":  "3",
-                              "ModifiedBy":  "CJDOVE",
+                              "Date":  "August 11, 2023 at 8:52 PM",
+                              "Modification":  "ABOUT THE INCREASE THE SIZE OF THE FORM AND CHANGE THE DESIGN PRIOR TO IMPLEMENTING KEYWORDS",
+                              "ModifiedBy":  "CURTI",
                               "Version":  "0.3"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 1:10 PM",
-                              "Modification":  "4",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.4"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:01 PM",
-                              "Modification":  "5",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.5"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:18 PM",
-                              "Modification":  "6",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.6"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:22 PM",
-                              "Modification":  "7",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.7"
-                          },
-                          {
-                              "Date":  "August 9, 2023 at 2:23 PM",
-                              "Modification":  "UPDATED FORM TO DYNAMIMC VERSION CONTROL",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "0.8"
-                          },
-                          {
-                              "Date":  "August 10, 2023 at 12:14 AM",
-                              "Modification":  "9",
-                              "ModifiedBy":  "CURTI",
-                              "Version":  "0.9"
-                          },
-                          {
-                              "Date":  "August 10, 2023 at 12:25 AM",
-                              "Modification":  "TEST",
-                              "ModifiedBy":  "CURTI",
-                              "Version":  "1.0"
                           }
-                      ]
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "",
+                         "DateCompleted":  "",
+                         "Task":  "",
+                         "Status":  "NotStarted",
+                         "CompletedBy":  ""
+                     }
+                 ]
 }
