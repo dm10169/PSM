@@ -1,16 +1,18 @@
 ﻿{
-    "Name":  "PSM-TODO-DONE",
+    "Name":  "PSM_COPY",
     "Author":  "CJDOVE - ChatGPT",
     "Description":  "PSM Master Script in Development",
-    "ScriptJson":  "C:\\SCRIPTS\\PSM-TODO-DONE.json",
-    "ScriptPath":  "C:\\SCRIPTS\\PSM-TODO-DONE.ps1",
-    "Version":  "1.1",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM_COPY.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM_COPY.ps1",
+    "Version":  "1.0",
     "ModifiedBy":  "CJDOVE - ChatGPT",
     "Tags":  [
                  "🔨 Broken",
                  "👩‍💻 Development",
+                 "⭐ Favorite",
                  "🚧 Fixing",
-                 "🏴 Mine"
+                 "🏴 Mine",
+                 "📜 PowerShell"
              ],
     "Modifications":  [
                           {
@@ -68,24 +70,19 @@
                               "Version":  "0.9"
                           },
                           {
-                              "Date":  "August 10, 2023 at 2:56 PM",
-                              "Modification":  "TEST3",
-                              "ModifiedBy":  "CJDOVE",
+                              "Date":  "August 10, 2023 at 12:25 AM",
+                              "Modification":  "TEST",
+                              "ModifiedBy":  "CURTI",
                               "Version":  "1.0"
-                          },
-                          {
-                              "Date":  "August 10, 2023 at 2:56 PM",
-                              "Modification":  "TEST4",
-                              "ModifiedBy":  "CJDOVE",
-                              "Version":  "1.1"
-                          },
-                          {
-                              "Date":  "August 11, 2023 at 2:12 AM",
-                              "Modification":  "Renamed Script and JSON from PSM-TODO-01_COPY to PSM-TODO-DONE",
-                              "ModifiedBy":  "PSM-TODO-DONE"
                           }
                       ],
     "ToDoList":  [
-
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 11, 2023 at 10:51 PM",
+                         "CompletedBy":  ""
+                     }
                  ]
 }
