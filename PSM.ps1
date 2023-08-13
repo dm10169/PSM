@@ -4,10 +4,14 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # Define the base script path
-$global:BaseScriptPath = Get-ConfigScriptPath
-$global:BackupFolderPath = Join-Path -Path $global:BaseScriptPath -ChildPath "backup"
 $global:preloadedMediaPlayer = $null
 $global:textBoxBackupCount = $null
+
+# Retrieve or Set Base Script Path
+$global:BaseScriptPath = Get-ConfigScriptPath
+if (-not $global:BaseScriptPath) {
+    Set-ScriptsPath
+}
 
 $colorList = @()
 
@@ -33,12 +37,11 @@ function UpdateFormTitle {
 
 # Retrieves the script path from the 'config.json' file
 function Get-ConfigScriptPath {
-    $configPath = Join-Path -Path $global:DefaultPath -ChildPath 'config.json'
+    $configPath = Join-Path $PSScriptRoot "config.json"
     if (Test-Path -Path $configPath) {
         $config = Get-Content -Path $configPath | ConvertFrom-Json
         return $config.ScriptPath
-    }
-    else {
+    } else {
         return $null
     }
 }
@@ -62,7 +65,7 @@ function Set-ConfigScriptPath {
         ScriptPath = $path
     } | ConvertTo-Json
 
-    $configPath = Join-Path -Path $global:DefaultPath -ChildPath 'config.json'
+    $configPath = Join-Path $PSScriptRoot "config.json"
     $config | Set-Content -Path $configPath
 }
 
@@ -83,7 +86,7 @@ function Initialize-Environment($scriptPath) {
 }
 
 # Opens a folder dialog for the user to select a new scripts directory and initializes the environment
-function Set-ScriptsPath {
+function Set-ScriptSPath {
     $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
     $dialog.Description = "Select a new scripts directory"
     $dialog.RootFolder = [Environment+SpecialFolder]::MyComputer
@@ -98,6 +101,13 @@ function Set-ScriptsPath {
 
         # Call the initialization function
         Initialize-Environment $textBoxScriptsPath.Text
+
+         # Display path information
+        $pathInfo = Get-ScriptPaths -selectedScript $global:selectedScript -baseScriptPath $global:BaseScriptPath
+
+        Write-Host "Selected Script Paths:"
+        Write-Host "Script Path: $($pathInfo.ScriptPath)" -ForegroundColor Yellow
+        Write-Host "JSON Path: $($pathInfo.JsonPath)" -ForegroundColor Yellow
     }
 }
 
@@ -180,17 +190,15 @@ function Get-JsonFilePath {
     return Join-Path -Path $textBoxScriptsPath.Text -ChildPath "$scriptName.json"
 }
 
-# Set Default Path
-$global:DefaultPath = [System.Environment]::GetFolderPath('MyDocuments')
-# Retrieve or Set Base Script Path
+# Declare global variables
+$global:preloadedMediaPlayer = $null
+$global:textBoxBackupCount = $null
 $global:BaseScriptPath = Get-ConfigScriptPath
-
-# Retrieve or Set Base Script Path
-if (-not $global:BaseScriptPath) {
-    Set-ScriptsPath
-}
-
+$global:selectedScript = $null
+$global:DefaultPath = [System.Environment]::GetFolderPath('MyDocuments')
+$global:BackupFolderPath = Join-Path -Path $global:BaseScriptPath -ChildPath "backup"
 # Constructs the full path for the specified sound file
+
 function Get-SoundFilePath {
     param (
         [string]$soundFileName
@@ -198,6 +206,51 @@ function Get-SoundFilePath {
 
     $soundsFolderPath = Join-Path -Path $textBoxScriptsPath.Text -ChildPath "sounds"
     return Join-Path -Path $soundsFolderPath -ChildPath $soundFileName
+}
+
+# Define a function to get paths and related variables
+function Get-ScriptPaths {
+    param (
+        [string]$selectedScript,
+        [string]$baseScriptPath
+    )
+   if ([string]::IsNullOrEmpty($baseScriptPath) -or [string]::IsNullOrEmpty($selectedScript)) {
+        Write-Host "Error: baseScriptPath or selectedScript is null or empty."
+        return # Return early to prevent further execution
+    }
+    # Debugging lines to check the input parameters
+    Write-Host "Debug: Selected Script: $selectedScript" -ForegroundColor Green
+    Write-Host "Debug: Base Script Path: $baseScriptPath" -ForegroundColor Green
+
+    # Construct the full paths
+    $scriptPath = Join-Path -Path $baseScriptPath -ChildPath "$selectedScript.ps1"
+    $jsonPath = Join-Path -Path $baseScriptPath -ChildPath "$selectedScript.json"
+    
+    # Get the script name without extension
+    $scriptName = [System.IO.Path]::GetFileNameWithoutExtension($scriptPath)
+    $jsonName = [System.IO.Path]::GetFileNameWithoutExtension($jsonPath)
+    
+    # Create an object to store the variables
+    $pathInfo = @{
+        BasePath = $baseScriptPath
+        ScriptPath = $scriptPath
+        JsonPath = $jsonPath
+        ScriptName = $scriptName
+        JsonName = $jsonName
+    }
+
+    # Colorful output for better visibility
+    Write-Host ("`n" + "-" * 50) -ForegroundColor Cyan
+    Write-Host "Path Information:" -ForegroundColor Cyan
+    Write-Host ("-" * 50) -ForegroundColor Cyan
+    Write-Host "Base Path: $($pathInfo.BasePath)" -ForegroundColor Yellow
+    Write-Host "Script Path: $($pathInfo.ScriptPath)" -ForegroundColor Yellow
+    Write-Host "JSON Path: $($pathInfo.JsonPath)" -ForegroundColor Yellow
+    Write-Host "Script Name: $($pathInfo.ScriptName)" -ForegroundColor Yellow
+    Write-Host "JSON Name: $($pathInfo.JsonName)" -ForegroundColor Yellow
+    Write-Host ("-" * 50) -ForegroundColor Cyan
+
+    return $pathInfo
 }
 
 # Function to preload a cool sound
@@ -265,7 +318,7 @@ function PlayCoolSound {
     }
 }
 
-# Function to toggle between Tagging Mode and Search Mode
+<## Function to toggle between Tagging Mode and Search Mode
 function ToggleMode($mode) {
     if ($mode -eq "Tagging") {
         # Switch to Tagging Mode
@@ -295,24 +348,22 @@ function ToggleMode($mode) {
         #}
     }
 }
-
+#>
 # Function to display a Random Quote in the RichTextBox at the bottom of the form
 function DisplayRandomQuote {
     $randomQuote = Get-Random -InputObject $inspirationalQuotes
     $richTextBoxOutput.Clear()
-    $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Segoe Script", 18, [System.Drawing.FontStyle]::Regular)
+    $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Segoe Script", 20, [System.Drawing.FontStyle]::Regular)
     $richTextBoxOutput.SelectionAlignment = [System.Windows.Forms.HorizontalAlignment]::Center  # Center the text
+    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::White
     $richTextBoxOutput.ForeColor = [System.Drawing.Color]::CornSilk
-
-    foreach ($char in $randomQuote.ToCharArray()) {
-        $richTextBoxOutput.AppendText($char)
-        $richTextBoxOutput.Refresh() # Redraw the control to make sure the update is visible
-        Start-Sleep -Milliseconds 25 # Delay for 40 ms between characters
-    }
+    $richTextBoxOutput.AppendText($randomQuote)
+    #foreach ($char in $randomQuote.ToCharArray()) {
+        #$richTextBoxOutput.AppendText($char)
+        #$richTextBoxOutput.Refresh() # Redraw the control to make sure the update is visible
+        #Start-Sleep -Milliseconds 5 # Delay for 40 ms between characters
+   # }
 }
-
-
-
 
 # Update the Backup Counter
 function Update-BackupCounter {
@@ -392,6 +443,7 @@ function CreateDefaultScriptAndJson {
                 "Version" = "0.0"
                 "Tags" = @("🆕 New Script", "📜 PowerShell", "👩‍💻 Development", "🗑️ Junk")
                 "ModifiedBy" = $env:username.ToUpper()
+                "Keywords" = @("POWERSHELL")
                 "Modifications" = @(
                     @{
                         "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
@@ -424,64 +476,7 @@ function CreateDefaultScriptAndJson {
     }
 }
 
-# Helper function for validating JSON content
-function ValidateJsonContent {
-    param (
-        $jsonContent,
-        $requiredProperties,
-        $selectedScript,
-        $ScriptsPath
-    )
-
-    $defaultValues = @{
-        'Name'          = $selectedScript.ToUpper()
-        'Author'        = $env:USERNAME.ToUpper()
-        'Description'   = "Please update this description"
-        'Version'       = "0.0"
-        'Tags'          = @("📜 PowerShell")
-        'ModifiedBy'    = $env:USERNAME.ToUpper()
-        "Modifications" = @(
-                    @{
-                        "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
-                        "ModifiedBy" = $env:username.ToUpper()
-                        "Modification" = "Default script created."
-                        "Version" = "0.1"
-                    }
-                )
-        'ToDoList'      = @( # Default structure for ToDoList
-            @{
-            "Title" = "Review Script"
-            "Task" = "Review Script for errors and Update!"
-            "DateCompleted" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt") 
-            "Status" = ([TaskStatus]::NotStarted).ToString() # Convert the enum value to a string
-            "CompletedBy" = ""
-            }
-        )
-        'ScriptJson'    = Join-Path -Path $ScriptsPath -ChildPath "$selectedScript.json"
-        'ScriptPath'    = Join-Path -Path $ScriptsPath -ChildPath "$selectedScript.ps1"
-    }
-
-    # Check if all required properties exist, if not add them with a default value
-    foreach ($property in $requiredProperties) {
-        if ($property -notin $jsonContent.PSObject.Properties.Name) {
-            $defaultValue = $defaultValues[$property]
-            Add-Member -InputObject $jsonContent -NotePropertyName $property -NotePropertyValue $defaultValue
-        }
-    }
-
-    # Check if any properties exist that aren't in the required list, if so remove them
-    foreach ($property in $jsonContent.PSObject.Properties.Name) {
-        if ($property -notin $requiredProperties) {
-            $jsonContent.PSObject.Properties.Remove($property)
-        }
-    }
-
-    # Validate that each property has an appropriate value. This will depend on what values you're expecting for each property.
-
-    return $jsonContent
-}
-
-# Helper function for Updating JSON content
+# Helper function for updating JSON content
 function UpdateJsonContent {
     param (
         $jsonContent,
@@ -490,68 +485,82 @@ function UpdateJsonContent {
         $jsonPath
     )
 
-
-    $requiredProperties = @("Name", "ScriptPath", "ScriptJson", "Author", "Description", "Version", "Tags", "ModifiedBy", "Modifications","ToDoList")
-
-    # Validate and clean up $jsonContent
-    $jsonContent = ValidateJsonContent -jsonContent $jsonContent -requiredProperties $requiredProperties -selectedScript $selectedScript -ScriptsPath $jsonPath
-
-    # Ensure $jsonContent is not null and is an object
-    if ($null -eq $jsonContent) {
-        $jsonContent = New-Object PSObject
+    # Define an enum for TaskStatus
+    enum TaskStatus {
+        NotStarted
+        InProgress
+        Completed
     }
 
-    # Ensure properties exist on $jsonContent
-    if ($null -eq $jsonContent.ScriptPath) {
-        Add-Member -InputObject $jsonContent -NotePropertyName ScriptPath -NotePropertyValue $scriptPath
-    } else {
-        $jsonContent.ScriptPath = $scriptPath
+    $requiredProperties = @(
+        "Name", "ScriptPath", "ScriptJson", "Author", "Description",
+        "Version", "Tags", "ModifiedBy", "Keywords", "Modifications", "ToDoList"
+    )
+
+    # Default property values
+    $defaultValues = @{
+        'Name' = $selectedScript.ToUpper()
+        'Author' = $env:USERNAME.ToUpper()
+        'Description' = "New Script $selectedScript"
+        'Version' = "0.1"
+        'Tags' = @("📜 PowerShell")
+        'ModifiedBy' = $env:USERNAME.ToUpper()
+        'Keywords' = @("POWERSHELL")
+        'Modifications' = @(
+            @{
+                "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                "Version" = "0.1"
+                "ModifiedBy" = $env:USERNAME.ToUpper()
+                "Modification" = "Created $($selectedScript) a JSON Buddy"
+            }
+        )
+        'ToDoList' = @(
+            @{
+                "Title" = "Review Script"
+                "Task" = "Review Script for errors and Update!"
+                "DateCompleted" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                "Status" = ([TaskStatus]::NotStarted).ToString()
+                "CompletedBy" = ""
+            }
+        )
     }
 
-    if ($null -eq $jsonContent.ScriptJson) {
-        Add-Member -InputObject $jsonContent -NotePropertyName ScriptJson -NotePropertyValue $jsonPath
-    } else {
-        $jsonContent.ScriptJson = $jsonPath
+    # Validate and populate missing properties
+    foreach ($property in $requiredProperties) {
+        if ($property -notin $jsonContent.PSObject.Properties.Name) {
+            $defaultValue = $defaultValues[$property]
+            Add-Member -InputObject $jsonContent -NotePropertyName $property -NotePropertyValue $defaultValue
+        }
     }
 
+    # Update existing properties
     $jsonContent.Name = $selectedScript.ToUpper()
-
+    $jsonContent.ScriptPath = $scriptPath
+    $jsonContent.ScriptJson = $jsonPath
     $jsonContent.Author = if ($jsonContent.Author -ne $null) { $jsonContent.Author } else { $env:USERNAME.ToUpper() }
-
     $jsonContent.Description = if ($jsonContent.Description -ne $null) { $jsonContent.Description } else { "New Script $selectedScript" }
-
-    if ($null -eq $jsonContent.Version) {
-        $jsonContent.Version = "0.1"  # Set the default version as 1.0 if the Version property is null
-    }
     
+    # Update the Version property based on modifications
     $highestVersion, $newJsonContent = Get-HighestVersionFromModifications -modifications $jsonContent.Modifications -jsonPath $jsonPath
-
-    Write-Host "Version before casting: $($jsonContent.Version), type: $($jsonContent.Version.GetType())"  # Debug line
-    if ([Version]$jsonContent.Version -eq [Version]"1.0" -or [Version]$jsonContent.Version -eq [Version]::new(0, 0)) {
-
-        $jsonContent.Version = "0.1"
-    }
-
+    
     if ($null -eq $highestVersion) {
         $highestVersion = "0.1"
     }
     $jsonContent.Version = $highestVersion.ToString()
 
-    # Save the updated JSON content back to the file
-    $jsonContent | ConvertTo-Json -Depth 4 | Out-File -FilePath $JsonPath -Encoding UTF8
-
+    # Update Tags if null or empty
     if ($null -eq $jsonContent.Tags) {
-        Add-Member -InputObject $jsonContent -NotePropertyName Tags -NotePropertyValue @("📜 PowerShell")
+        $jsonContent.Tags = @("📜 PowerShell")
     } elseif ($jsonContent.Tags.Count -eq 0) {
         $jsonContent.Tags = @("📜 PowerShell")
     }
 
+    # Update ModifiedBy if null
     if ($null -eq $jsonContent.ModifiedBy) {
-        Add-Member -InputObject $jsonContent -NotePropertyName ModifiedBy -NotePropertyValue $env:USERNAME.ToUpper()
-    } else {
         $jsonContent.ModifiedBy = $env:USERNAME.ToUpper()
     }
 
+    # Update Modifications if null or empty
     if (-not $jsonContent.PSObject.Properties['Modifications'] -or $jsonContent.Modifications.Length -eq 0) {
         $defaultModification = @{
             "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
@@ -562,14 +571,19 @@ function UpdateJsonContent {
         $jsonContent.Modifications = @($defaultModification)
     }
 
+    # Update Keywords if null or not an array, or if it does not contain "POWERSHELL"
+    if ($null -eq $jsonContent.Keywords -or $jsonContent.Keywords.GetType().IsArray -eq $false -or "POWERSHELL" -notin $jsonContent.Keywords) {
+        $jsonContent.Keywords = @("POWERSHELL")
+    }
+
 
     # Delete unnecessary properties in the JSON
-    $requiredProperties = @("Name", "ScriptPath", "ScriptJson", "Author", "Description", "Version", "Tags", "ModifiedBy", "Modifications","ToDoList")
-    foreach ($property in $jsonContent.PSObject.Properties.Name) {
-        if ($property -notin $requiredProperties) {
-            $jsonContent.PSObject.Properties.Remove($property)
-        }
+    $jsonContent.PSObject.Properties | Where-Object { $_.Name -notin $requiredProperties } | ForEach-Object {
+        $jsonContent.PSObject.Properties.Remove($_.Name)
     }
+
+    # Save the updated JSON content back to the file
+    $jsonContent | ConvertTo-Json -Depth 4 | Out-File -FilePath $JsonPath -Encoding UTF8
 
     return $jsonContent
 }
@@ -577,7 +591,6 @@ function UpdateJsonContent {
 # function is responsible for loading, modifying, and displaying information related to a selected script
 function PopulateFieldsAndTags {
     try {
-        
         # Define an enum for TaskStatus
         enum TaskStatus {
             NotStarted
@@ -591,15 +604,13 @@ function PopulateFieldsAndTags {
         PreloadCoolSound -SoundFileName "selectscript.mp3"
 
         if ($selectedScript) {
-            $scriptPathWithoutExtension = Join-Path -Path $textBoxScriptsPath.Text -ChildPath $selectedScript
-            $scriptPath = $scriptPathWithoutExtension + ".ps1"
-            $jsonPath = $scriptPathWithoutExtension + ".json"
+            $pathInfo = Get-ScriptPaths -selectedScript $selectedScript -baseScriptPath $textBoxScriptsPath.Text
+            $scriptPath = $pathInfo.ScriptPath
+            $jsonPath = $pathInfo.JsonPath
 
-            # Check if the script path exists
-            if (-not (Test-Path -Path $scriptPath)) {
-                Write-Host "Script path does not exist: $scriptPath"
-                return
-            }
+            # Load JSON content
+            #$jsonContent = Get-Content -Path $jsonPath | ConvertFrom-Json
+            #Write-Host "Debug: Initial JSON Content: $($jsonContent | ConvertTo-Json)" # Debug statement
 
             # Load or create JSON content for non-default scripts
             if (Test-Path -Path $jsonPath) {
@@ -614,6 +625,7 @@ function PopulateFieldsAndTags {
                     "Version" = "0.1"  # Set the default version as 0.1
                     "Tags" = @("📜 PowerShell")
                     "ModifiedBy" = $env:username.ToUpper()
+                    "Keywords" = @()
                     "Modifications" = @(
                         @{
                             "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
@@ -636,12 +648,17 @@ function PopulateFieldsAndTags {
                 Write-Host "JSON file $jsonPath created."
             }
 
+            
+
+            # Remove null values from the Keywords array
+            $jsonContent.Keywords = $jsonContent.Keywords | Where-Object { $_ -ne $null }
+
             # Populate fields with the JSON content
             $fileInfo = Get-Item -Path $scriptPath
             $textBoxName.Text = $jsonContent.Name
             $textBoxDescription.Text = $jsonContent.Description
             $textBoxAuthor.Text = $jsonContent.Author
-            $textBoxVersion.Text = $jsonContent.Version  # Update the version field
+            $textBoxVersion.Text = $jsonContent.Version
             $textBoxDateCreated.Text = $fileInfo.CreationTime.ToString("MMMM dd, yyyy 'at' hh:mm tt")
             $textBoxDateModified.Text = $fileInfo.LastWriteTime.ToString("MMMM dd, yyyy 'at' hh:mm tt")
             $textBoxModifiedBy.Text = $jsonContent.ModifiedBy.ToUpper()
@@ -650,16 +667,35 @@ function PopulateFieldsAndTags {
             # Count the number of backup files and update the backup counter
             Update-BackupCounter -ScriptName $jsonContent.Name -BackupFolderPath $global:BackupFolderPath -LabelBackupCountValue $labelBackupCountValue
 
+
+             #Clear and populate $listBoxScriptTags with all available tags
+            $listBoxKeywords.BeginUpdate()
+            $listBoxKeywords.Items.Clear()
+
+            if ($jsonContent.Keywords -ne $null) {
+                Write-Host "Debug: Keywords before updating ListBox: $($jsonContent.Keywords -join ', ')"
+                $jsonContent.Keywords | ForEach-Object {
+                    $uppercaseKeyword = $_.ToUpper()
+                    Write-Host "Debug: Adding keyword: $uppercaseKeyword"
+                    $listBoxKeywords.Items.Add($uppercaseKeyword)
+                }
+            } else {
+                Write-Host "Debug: No Keywords property found in JSON content"
+            }
+
+            $listBoxKeywords.EndUpdate()
+
+            Write-Host "Debug: ListBox Keywords after updating:"
+            $listBoxKeywords.Items | ForEach-Object {
+                Write-Host "Debug: - $_"
+            }
+
             # Clear and populate $listBoxScriptTags with all available tags
             $listBoxScriptTags.Items.Clear()
             $tags | ForEach-Object {
                 $itemText = "$($_.Icon) $($_.Name)"
                 $listBoxScriptTags.Items.Add($itemText)
             }
-
-            # Set the font size for the ListBox
-            $listBoxScriptTags.Font = New-Object System.Drawing.Font("Agency FB", 12)
-            $cellHeight = 44
 
             # Check the tags that the script has
             $selectedTags = $jsonContent.Tags
@@ -687,6 +723,7 @@ function PopulateFieldsAndTags {
         Write-Host "An error occurred: $_"
     }
 }
+
 
 # Function to populate the ListBox with tags and highlight matching tags
 function PopulateTags {
@@ -727,6 +764,7 @@ function ClearForm {
     $textBoxJsonFile.Text = ""
     $richTextBoxOutput.Text = ""
     $listBoxScriptTags.ClearSelected()
+    $listBoxKeywords.ClearSelected()
 }
 
 # Define the function to populate the ListBox with script names
@@ -1164,31 +1202,26 @@ function Add-TaskToToDoList {
     $row.Cells[$datecompletedColumn.Index].Value = $newTask.DateCompleted
 }
 
+# Function Get Highest Version Number from Modifications for Incrementing Log
 function Get-HighestVersionFromModifications {
     param (
         [array]$modifications,
         [string]$jsonPath
     )
 
-    Write-Host "Inside Get-HighestVersionFromModifications function"
-    Write-Host "JSON path received: $jsonPath"
-    Write-Host "Number of modifications received: $($modifications.Count)"
-
     $versions = @()
     if ($null -ne $modifications) {
         $versions = $modifications | ForEach-Object { $_.Version }
     }
-    Write-Host "[Source:Get-HighestVersionFromModifications]Versions extracted: $($versions -join ', ')"
 
     $highestVersion = "0.1" # Default value
     if ($versions.Count -gt 0) {
         $highestVersion = [version]($versions | Sort-Object -Descending | Select-Object -First 1)
     }
 
-    Write-Host "Version after casting: $($highestVersion.ToString()), type: $($highestVersion.GetType().FullName)"
-
     return $highestVersion
 }
+
 
 # Function to set up the DataGridView event handler for CellContentClick
 function SetupDataGridViewEventHandler {
@@ -1837,6 +1870,7 @@ $tags = @(
     @{ Name = "Bitlocker"; Icon = "🔒" },
     @{ Name = "Broken"; Icon = "🔨" },
     @{ Name = "Certificates"; Icon = "📜" },
+    @{ Name = "Citrix"; Icon = "🖥️" },
     @{ Name = "Cloud"; Icon = "☁️" },
     @{ Name = "Commands"; Icon = "⌨️" },
     @{ Name = "Configuration"; Icon = "⚙️" },
@@ -1844,8 +1878,9 @@ $tags = @(
     @{ Name = "Databases"; Icon = "🗃️" },
     @{ Name = "DCAP"; Icon = "🔒" },
     @{ Name = "Deployment"; Icon = "🚀" },
-    @{ Name = "Design"; Icon = "✏️" }
+    @{ Name = "Design"; Icon = "✏️" },
     @{ Name = "Development"; Icon = "👩‍💻" },
+    @{ Name = "Engineering"; Icon = "👷" },
     @{ Name = "Error Handling"; Icon = "❌" },
     @{ Name = "Excel"; Icon = "📊" },
     @{ Name = "Favorite"; Icon = "⭐" },
@@ -1853,6 +1888,7 @@ $tags = @(
     @{ Name = "Firewall"; Icon = "🔥" },
     @{ Name = "Fixing"; Icon = "🚧" },
     @{ Name = "Functions"; Icon = "🔧" },
+    @{ Name = "Has Keywords"; Icon = "🔠" },
     @{ Name = "High Priority"; Icon = "🔝" },
     @{ Name = "Hypervisor"; Icon = "🛠️" },
     @{ Name = "iDRAC"; Icon = "🖥️" },
@@ -1865,15 +1901,18 @@ $tags = @(
     @{ Name = "Mine"; Icon = "🏴" },
     @{ Name = "Monitoring"; Icon = "👀" },
     @{ Name = "Modules"; Icon = "📦" },
+    @{ Name = "Needs Approval"; Icon = "👍" },
     @{ Name = "Networking"; Icon = "🌐" },
     @{ Name = "New Script"; Icon = "🆕" },
     @{ Name = "Not Mine"; Icon = "🏳️" },
     @{ Name = "Open Tasks"; Icon = "📝" },
     @{ Name = "Parameters"; Icon = "🛠️" },
     @{ Name = "PowerShell"; Icon = "📜" },
-    @{ Name = "PS Dashboard"; Icon = "📊" },
     @{ Name = "Profiles"; Icon = "👤" },
+    @{ Name = "PS Dashboard"; Icon = "📊" },
     @{ Name = "Quality Control"; Icon = "✅" },
+    @{ Name = "Requirements"; Icon = "📋" },
+    @{ Name = "Reviewed"; Icon = "🔍" },
     @{ Name = "Remoting"; Icon = "🔗" },
     @{ Name = "Reports"; Icon = "📊" },
     @{ Name = "Security"; Icon = "🛡️" },
@@ -1881,13 +1920,16 @@ $tags = @(
     @{ Name = "SSH"; Icon = "🔑" },
     @{ Name = "Storage"; Icon = "🗄️" },
     @{ Name = "Switch"; Icon = "🔀" },
+    @{ Name = "SYSAdmin"; Icon = "💻" },
     @{ Name = "Tape Library"; Icon = "📼" },
     @{ Name = "Templates"; Icon = "📄" },
     @{ Name = "Tools"; Icon = "🛠️" },
     @{ Name = "User Management"; Icon = "👤" },
     @{ Name = "Virtual Machines"; Icon = "🖥️" },
-    @{ Name = "Working"; Icon = "✔️" }
+    @{ Name = "Working"; Icon = "✔️" },
+    @{ Name = "WTF"; Icon = "⁉️" }
 )
+
 
 # Set the script directory
 #$scriptDirectory = "C:\curtis\PSM"
@@ -1935,7 +1977,7 @@ $scriptVersionString = $highestJsonContent.Version
 # Initializing the Main PowerShell Script Manager Form
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "PowerShell Script Manager $scriptVersionString"
-$form.Size = New-Object System.Drawing.Size(880, 1000) # Increase W = Wider, H = Taller.
+$form.Size = New-Object System.Drawing.Size(1080, 1000) # Increase W = Wider, H = Taller.
 $form.StartPosition = "CenterScreen"
 $form.BackColor = [System.Drawing.Color]::Wheat
 
@@ -1956,19 +1998,17 @@ $form.BackColor = [System.Drawing.Color]::Wheat
 # Output RichTextBox
 $richTextBoxOutput = New-Object System.Windows.Forms.RichTextBox
 $richTextBoxOutput.Location = New-Object System.Drawing.Point(15, 760) # Increase X = Right, Y = Down
-$richTextBoxOutput.Size = New-Object System.Drawing.Size(835, 180)     # Increase W = Wider, H = Taller.
+$richTextBoxOutput.Size = New-Object System.Drawing.Size(1035, 180)     # Increase W = Wider, H = Taller.
 $richTextBoxOutput.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 9) # Set font size
-#$richTextBoxOutput.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 9) # Set font size
-#$richTextBoxOutput.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 9) # Set font size
 $richTextBoxOutput.BackColor = [System.Drawing.Color]::SaddleBrown
-#$richTextBoxOutput.ForeColor = [System.Drawing.Color]::WhiteSmoke
+$richTextBoxOutput.ForeColor = [System.Drawing.Color]::WhiteSmoke
 $richTextBoxOutput.ReadOnly = $true
 $form.Controls.Add($richTextBoxOutput)
 
 # Scripts Path Label
 $labelScriptsPath = New-Object System.Windows.Forms.Label
 $labelScriptsPath.Text = "Script Functions"
-$labelScriptsPath.Location = New-Object System.Drawing.Point(60, 25) # Increase X = Right, y = Down
+$labelScriptsPath.Location = New-Object System.Drawing.Point(20, 25) # Increase X = Right, y = Down
 $labelScriptsPath.Size = New-Object System.Drawing.Size(103, 15)     # Increase W = Wider, H = Taller.
 $labelScriptsPath.Font = New-Object System.Drawing.Font("Mistral", 10)
 $form.Controls.Add($labelScriptsPath)
@@ -1976,8 +2016,8 @@ $form.Controls.Add($labelScriptsPath)
 # Script Path Text Box
 $textBoxScriptsPath = New-Object System.Windows.Forms.TextBox
 $textBoxScriptsPath.Location = New-Object System.Drawing.Point(0, 7) # Increase X = Right, y = Down
-$textBoxScriptsPath.Size = New-Object System.Drawing.Size(830, 30)      # Increase W = Wider, H = Taller.
-$textBoxScriptsPath.Font = New-Object System.Drawing.Font("Georgia", 16, [System.Drawing.FontStyle]::Bold)
+$textBoxScriptsPath.Size = New-Object System.Drawing.Size(1035, 30)      # Increase W = Wider, H = Taller.
+$textBoxScriptsPath.Font = New-Object System.Drawing.Font("Agency FB", 16, [System.Drawing.FontStyle]::Bold)
 $textBoxScriptsPath.BorderStyle = "None"
 $textBoxScriptsPath.BackColor = $form.BackColor
 $textBoxScriptsPath.ForeColor = [System.Drawing.Color]::Black
@@ -2024,12 +2064,12 @@ $form.Controls.Add($textBoxScriptsPath)
 $form.Add_Paint({
     $graphics = $_.Graphics
     $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::Gray, 1)
-    $rectangle = New-Object System.Drawing.Rectangle(30, 35, 800, 50) #Right,Down,Wide,Tall
+    $rectangle = New-Object System.Drawing.Rectangle(15, 35, 1035, 50) #Right,Down,Wide,Tall
     $graphics.DrawRectangle($pen, $rectangle)
 })
 
 # Change button sizes
-$buttonsize = 70
+$buttonsize = 90
 # Define the gap between buttons
 $buttonGap = 0
 $buttonHeight = 30
@@ -2057,18 +2097,15 @@ $buttonLoadScripts.Add_Click({
 
     $richTextBoxOutput.Clear()
     $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Arial", 18, [System.Drawing.FontStyle]::Bold)
-    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::SaddleBrown
-    #$richTextBoxOutput.BackColor = [System.Drawing.Color]::FromArgb(230, 230, 230)  # Lighter gray
+    #$richTextBoxOutput.SelectionColor = [System.Drawing.Color]::SaddleBrown
     $richTextBoxOutput.BackColor = [System.Drawing.Color]::SaddleBrown
     $richTextBoxOutput.ForeColor = [System.Drawing.Color]::CornSilk
-
     $richTextBoxOutput.SelectionAlignment = [System.Windows.Forms.HorizontalAlignment]::Center  # Center the text
     $richTextBoxOutput.AppendText("Welcome to PowerShell Script Manager $scriptVersionString`r`n`r`n")
-    $richTextBoxOutput.ForeColor = [System.Drawing.Color]::White
     $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Helvetica", 12)
     #$richTextBoxOutput.SelectionAlignment = [System.Windows.Forms.HorizontalAlignment]::Left  # Left align the text
  
-    #$richTextBoxOutput.SelectionColor = [System.Drawing.Color]::White
+    $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::White
     $richTextBoxOutput.AppendText("PSM $scriptVersionString empowers users with various operations for script management. Each script will get it's own JSON, capturing essential details, including modifications, authors, versions, and timestamps.
 
 With a built-in tagging system and keyword search, finding scripts is easier than ever. Efficiently search using keywords for streamlined script management and retrieval.")
@@ -2077,7 +2114,7 @@ With a built-in tagging system and keyword search, finding scripts is easier tha
     $scriptPath = $textBoxScriptsPath.Text
     if (-not (Test-Path -Path $scriptPath)) {
         # Create a FolderBrowserDialog to let the user select the script path
-        $scriptPath = Set-ScriptPath
+        $scriptPath = Set-ScriptsPath
         if (-not (Test-Path -Path $scriptPath)) {
             return
         }
@@ -2107,28 +2144,34 @@ With a built-in tagging system and keyword search, finding scripts is easier tha
     }
 })
 $form.Controls.Add($buttonLoadScripts)
-#$groupbox.Controls.Add($ButtonLoadScripts)
 
-# Button for Search Mode (Default button)
-$buttonSearchMode = New-Object System.Windows.Forms.Button
-$buttonSearchMode.Text = "Search Tags to Filter"
-$buttonSearchMode.Location = New-Object System.Drawing.Point(13, 500) # Increase X = Right, Y = Down
-$buttonSearchMode.Size = New-Object System.Drawing.Size(150, 25) # Increase W = Wider, H = Taller
-$buttonSearchMode.BackColor = [System.Drawing.Color]::GhostWhite  # Light blue color
-$buttonSearchMode.ForeColor = [System.Drawing.Color]::DarkSlateGray  # Black text color
-# Event handler for the "Search" button click
-$buttonSearchMode.Add_Click({
-    ShowTagSelectionForm
-})
-$form.Controls.Add($buttonSearchMode)
+
+
+################# keyword search area ###################
+
+# Create a label for the search text box
+#$searchLabel = New-Object System.Windows.Forms.Label
+#$searchLabel.Location = New-Object System.Drawing.Point(865, 120) # Position it above the search text box
+#$searchLabel.Size = New-Object System.Drawing.Size(180, 20) # Set the size
+#$searchLabel.Font = New-Object System.Drawing.Font("Arial", 10)
+#$searchLabel.Text = "Script Keyword Search"
+#$searchLabel.ForeColor = [System.Drawing.Color]::DarkSlateGray
+#$searchLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+#$form.Controls.Add($searchLabel)
+
+
+
+
+
+################# keyword search area ###################
 
 $labelDevelopedBy = New-Object System.Windows.Forms.Label
 $labelDevelopedBy.Text = "Developed By: Curtis Dove, MCSA MCSE VCP CASP"
-$labelDevelopedBy.Location = New-Object System.Drawing.Point(18, 450) # Increase X = Right, y = Down
+$labelDevelopedBy.Location = New-Object System.Drawing.Point(18, 485) # Increase X = Right, y = Down
 $labelDevelopedBy.Size = New-Object System.Drawing.Size(375, 20) # Increase W = Wider, H = Taller.
 $labelDevelopedBy.Font = New-Object System.Drawing.Font("Georgia", 8, ([System.Drawing.FontStyle]::Italic))
-$labelDevelopedBy.ForeColor = [System.Drawing.Color]::Gray
-$labelDevelopedBy.BackColor = [System.Drawing.Color]::White
+$labelDevelopedBy.ForeColor = [System.Drawing.Color]::Silver
+$labelDevelopedBy.BackColor = [System.Drawing.Color]::MintCream
 $labelDevelopedBy.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $form.Controls.Add($labelDevelopedBy)
 
@@ -2230,41 +2273,43 @@ $buttonCreateScript.Add_Click({
 
     $newScriptForm = New-Object System.Windows.Forms.Form
     $newScriptForm.Text = "Create New Script"
-    $newScriptForm.Size = New-Object System.Drawing.Size(500, 760)        # Increase W = Wider, H = Taller.
+    $newScriptForm.Size = New-Object System.Drawing.Size(400, 760)        # Increase W = Wider, H = Taller.
     $newScriptForm.StartPosition = "CenterScreen"
+    $newScriptForm.BackColor = [System.Drawing.Color]::Peru
+    $newScriptForm.ForeColor = [System.Drawing.Color]::White
 
     $labelNewScriptName = New-Object System.Windows.Forms.Label
     $labelNewScriptName.Text = "Script Name:"
     $labelNewScriptName.Location = New-Object System.Drawing.Point(10, 10) # Increase X = Right, y = Down
-    $labelNewScriptName.Size = New-Object System.Drawing.Size(110, 22)     # Increase W = Wider, H = Taller.
+    $labelNewScriptName.Size = New-Object System.Drawing.Size(120, 22)     # Increase W = Wider, H = Taller.
     $newScriptForm.Controls.Add($labelNewScriptName)
-
 
     $textBoxNewScriptName = New-Object System.Windows.Forms.TextBox
     $textBoxNewScriptName.Location = New-Object System.Drawing.Point(132, 10) # Increase X = Right, y = Down
-    $textBoxNewScriptName.Size = New-Object System.Drawing.Size(220, 22)      # Increase W = Wider, H = Taller.
+    $textBoxNewScriptName.Size = New-Object System.Drawing.Size(230, 22)      # Increase W = Wider, H = Taller.
     $newScriptForm.Controls.Add($textBoxNewScriptName)
 
     # Add a ListBox to select tags
     $labelTags = New-Object System.Windows.Forms.Label
     $labelTags.Text = "Tags:"
     $labelTags.Location = New-Object System.Drawing.Point(35, 40) # Increase X = Right, y = Down
-    $labelTags.Size = New-Object System.Drawing.Size(110, 22)     # Increase W = Wider, H = Taller.
+    $labelTags.Size = New-Object System.Drawing.Size(60, 22)     # Increase W = Wider, H = Taller.
     $newScriptForm.Controls.Add($labelTags)
 
     $tagsListBox = New-Object System.Windows.Forms.ListBox
     $tagsListBox.Name = "tagsListBox"
-    $tagsListBox.SelectionMode = "MultiExtended"
+    $tagsListBox.SelectionMode = [System.Windows.Forms.SelectionMode]::MultiSimple  # Set to MultiSimple for easy multiple selection
     $tagsListBox.Location = New-Object System.Drawing.Point(132, 40) # Increase X = Right, y = Down
-    $tagsListBox.Size = New-Object System.Drawing.Size(320, 540)     # Increase W = Wider, H = Taller.
+    $tagsListBox.Size = New-Object System.Drawing.Size(230, 540)     # Increase W = Wider, H = Taller.
     $tagsListBox.MultiColumn = $true
     $tagsListBox.ColumnWidth = 100
-    $tagsListBox.BackColor = [System.Drawing.Color]::LightGray
-    $tagsListBox.BorderStyle = [System.Windows.Forms.BorderStyle]::None
+    $tagsListBox.BackColor = [System.Drawing.Color]::PapayaWhip
+    $tagsListBox.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
     $tagsListBox.Font = New-Object System.Drawing.Font("Arial", 10)
 
-    # Add tags to the ListBox
-    $tagsListBox.Items.AddRange($tags)
+    # Add tags to the ListBox with custom formatting
+    $tagsListBox.Items.AddRange(($tags | ForEach-Object { "$($_.Icon) $($_.Name)" }))
+
 
     $newScriptForm.Controls.Add($tagsListBox)
 
@@ -2272,19 +2317,19 @@ $buttonCreateScript.Add_Click({
     $labelCustomTag = New-Object System.Windows.Forms.Label
     $labelCustomTag.Text = "Custom Tag:"
     $labelCustomTag.Location = New-Object System.Drawing.Point(10, 600) # Increase X = Right, y = Down
-    $labelCustomTag.Size = New-Object System.Drawing.Size(110, 22)      # Increase W = Wider, H = Taller.
+    $labelCustomTag.Size = New-Object System.Drawing.Size(120, 22)      # Increase W = Wider, H = Taller.
     $newScriptForm.Controls.Add($labelCustomTag)
 
     $textBoxCustomTag = New-Object System.Windows.Forms.TextBox
     $textBoxCustomTag.Location = New-Object System.Drawing.Point(132, 600) # Increase X = Right, y = Down
-    $textBoxCustomTag.Size = New-Object System.Drawing.Size(220, 22)       # Increase W = Wider, H = Taller.
+    $textBoxCustomTag.Size = New-Object System.Drawing.Size(230, 22)       # Increase W = Wider, H = Taller.
     $newScriptForm.Controls.Add($textBoxCustomTag)
 
     # Add a Button to add the custom tag to the ListBox
     $buttonAddCustomTag = New-Object System.Windows.Forms.Button
     $buttonAddCustomTag.Text = "Add Tag"
     $buttonAddCustomTag.Location = New-Object System.Drawing.Point(10, 630) # Increase X = Right, y = Down
-    $buttonAddCustomTag.Size = New-Object System.Drawing.Size(110, 33)      # Increase W = Wider, H = Taller.
+    $buttonAddCustomTag.Size = New-Object System.Drawing.Size(120, 33)      # Increase W = Wider, H = Taller.
     $buttonAddCustomTag.Add_Click({
     $customTag = $textBoxCustomTag.Text
         if (-not [string]::IsNullOrWhiteSpace($customTag)) {
@@ -2313,15 +2358,36 @@ Write-Host "Hello, $newScriptName!"
 "@
             $newScriptContent | Out-File -FilePath $newScriptPath -Encoding UTF8
 
+            $selectedTags = $tagsListBox.SelectedItems | ForEach-Object { $_.ToString() -replace '^.*\s', '' }  # Extract tag name from the custom format
+
+            # Update the JSON content for the new script
             $newScriptJson = @{
-                Name = $newScriptName
-                Description = "This is a new script."
-                Version = 0.0
-                Author = "Your Name"
-                ModifiedBy = "Your Name"
-                Tags = $tagsListBox.SelectedItems
-                Modifications = @()
-                ToDoList = @()
+                "Name" = $selectedScript
+                "ScriptPath" = $newScriptPath
+                "ScriptJson" = $newJsonPath
+                "Author" = $env:username.ToUpper()
+                "Description" = "New Script $selectedScript"
+                "Version" = "0.1"
+                "Tags" = @("📜 PowerShell")
+                "ModifiedBy" = $env:username.ToUpper()
+                "Keywords" = @()
+                "Modifications" = @(
+                    @{
+                        "Date" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                        "Version" = "0.1"
+                        "ModifiedBy" = $env:username.ToUpper()
+                        "Modification" = "Created $($selectedScript) a JSON Buddy"
+                    }
+                )
+                "ToDoList" = @(
+                    @{
+                        "Title" = "Review Script"
+                        "Task" = "Review Script for errors and Update!"
+                        "DateCompleted" = (Get-Date -Format "MMMM d, yyyy 'at' h:mm tt")
+                        "Status" = ([TaskStatus]::NotStarted).ToString()
+                        "CompletedBy" = ""
+                    }
+                )
             } | ConvertTo-Json -Depth 4
 
             $newScriptJson | Out-File -FilePath $newJsonPath -Encoding UTF8
@@ -2338,6 +2404,8 @@ Write-Host "Hello, $newScriptName!"
         [System.Windows.Forms.MessageBox]::Show("Please enter a script name.", "Create Script", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
     }
 })
+
+
 
 
     $newScriptForm.Controls.Add($buttonCreateNewScript)
@@ -2438,13 +2506,20 @@ $buttonRenameScript.Add_Click({
                     Write-Host "Updating JSON Content..."
                     $jsonContent = Get-Content -Path $newJsonPath | ConvertFrom-Json
 
+                    # Increment the version number by 0.1
+                    # Assuming the version number is in the Version property of the JSON content
+                    $currentVersion = [double]::Parse($jsonContent.Version)
+                    $newVersion = $currentVersion + 0.1
+                    $jsonContent.Version = $newVersion.ToString("F1")  # Formats it with one decimal place
+
                     # Update the script name within the Modifications array
                     $currentDate = Get-Date
                     $currentDateFormatted = $currentDate.ToString("MMMM d, yyyy 'at' h:mm tt")
                     $newModification = @{
                         "Date" = $currentDateFormatted
                         "Modification" = "Renamed Script and JSON from $selectedScript to $newName"
-                        "ModifiedBy" = $newName
+                        "ModifiedBy" = $env:USERNAME.ToUpper()
+                        "Version" = $newVersion  # Include the new version number in the modification entry
                     }
                     $jsonContent.Modifications += $newModification
 
@@ -2561,8 +2636,9 @@ $form.Controls.Add($buttonRunScript)
 # Create the backup counter label
 $labelBackupCounter = New-Object System.Windows.Forms.Label
 $labelBackupCounter.Text = "Backups:"
-$labelBackupCounter.Location = New-Object System.Drawing.Point(260, 100) # Increase X = Right, y = Down
-$labelBackupCounter.AutoSize = $true
+$labelBackupCounter.Location = New-Object System.Drawing.Point(330, 100) # Increase X = Right, y = Down
+$labelBackupCounter.size = New-Object System.Drawing.Size(50, 15)
+#$labelBackupCounter.Size = $true
 $labelBackupCounter.ForeColor = [System.Drawing.Color]::Black
 # Creating on on-click affect to out-grid the backup data
 $labelBackupCounter.Add_Click({
@@ -2613,8 +2689,8 @@ $labelBackupCounter.Add_Click({
 # Backup Counter Value
 $labelBackupCountValue = New-Object System.Windows.Forms.Label
 $labelBackupCountValue.Text = "0"
-$labelBackupCountValue.Location = New-Object System.Drawing.Point(320, 100)
-$labelBackupCountValue.Size = New-Object System.Drawing.Size(40, 20)
+$labelBackupCountValue.Location = New-Object System.Drawing.Point(380, 100)
+$labelBackupCountValue.Size = New-Object System.Drawing.Size(30, 15)
 $labelBackupCountValue.ForeColor = [System.Drawing.Color]::Red
 
 # Calculate the position of the new buttons
@@ -2845,10 +2921,11 @@ $form.Controls.Add($labelScripts)
 # Create the scripts ListBox
 $listBoxScripts = New-Object System.Windows.Forms.ListBox
 $listBoxScripts.Name = "listBoxScripts"
-$listBoxScripts.Location = New-Object System.Drawing.Point(15, 120) # Increase X = Right, Y = Down
-$listBoxScripts.Size = New-Object System.Drawing.Size(380, 375)   # Increase W = Wider, H = Taller.
+$listBoxScripts.Location = New-Object System.Drawing.Point(15, 140) # Increase X = Right, Y = Down
+$listBoxScripts.Size = New-Object System.Drawing.Size(380, 630)   # Increase W = Wider, H = Taller.
 $listBoxScripts.SelectionMode = "One"
 $listBoxScripts.Font = New-Object System.Drawing.Font("Arial", 10)
+$listBoxScripts.backcolor = [System.Drawing.Color]::MintCream
 $form.Controls.Add($listBoxScripts)
 
 # Create a progress bar
@@ -2860,8 +2937,8 @@ $form.Controls.Add($listBoxScripts)
 # Commit Script & JSON to GIT Button
 $buttonCommitToGit = New-Object System.Windows.Forms.Button
 $buttonCommitToGit.Text = "Commit Script and JSON to GIT"
-$buttonCommitToGit.Location = New-Object System.Drawing.Point(15, 470)  # Increase X = Right, Y = Down
-$buttonCommitToGit.Size = New-Object System.Drawing.Size(380, 22)       # Increase W = Wider, H = Taller.
+$buttonCommitToGit.Location = New-Object System.Drawing.Point(15, 505)  # Increase X = Right, Y = Down
+$buttonCommitToGit.Size = New-Object System.Drawing.Size(380, 25)       # Increase W = Wider, H = Taller.
 $buttonCommitToGit.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $buttonCommitToGit.FlatAppearance.BorderSize = 1
 $buttonCommitToGit.BackColor = [System.Drawing.Color]::BurlyWood
@@ -2950,7 +3027,7 @@ $tagsListBox.MultiColumn = $true
 $tagsListBox.ColumnWidth = 100
 $tagsListBox.BackColor = [System.Drawing.Color]::LightGray
 $tagsListBox.BorderStyle = [System.Windows.Forms.BorderStyle]::None
-$tagsListBox.Font = New-Object System.Drawing.Font("Arial", 10)
+$tagsListBox.Font = New-Object System.Drawing.Font("Arial", 12)
 
 try {
     $tagsListBox.Items.AddRange($tags)
@@ -2963,21 +3040,25 @@ try {
 ###################################### NAME LABEL & TEXT BOX  #############################################
 
 # Name Label
-$labelName = New-Object System.Windows.Forms.Label
-$labelName.Text = "Name:"
-$labelName.Location = New-Object System.Drawing.Point(410, 100)   # Increase X = Right, y = Down
-$labelName.Size = New-Object System.Drawing.Size(100, 20)         # Increase W = Wider, H = Taller.
-$form.Controls.Add($labelName)
+#$labelName = New-Object System.Windows.Forms.Label
+#$labelName.Text = "Script Name:"
+#$labelName.Location = New-Object System.Drawing.Point(405, 100)   # Increase X = Right, y = Down
+#$labelName.Size = New-Object System.Drawing.Size(100, 20)         # Increase W = Wider, H = Taller.
+#$form.Controls.Add($labelName)
 
 # Name Text Box
 $textBoxName = New-Object System.Windows.Forms.TextBox
-$textBoxName.Location = New-Object System.Drawing.Point(520, 100) # Increase X = Right, y = Down
-$textBoxName.Size = New-Object System.Drawing.Size(330, 100)      # Increase W = Wider, H = Taller.
-$textBoxName.Font = New-Object System.Drawing.Font("Agency FB", 12, [System.Drawing.FontStyle]::Bold)
-$textBoxName.TextAlign = [System.Windows.Forms.HorizontalAlignment]::Center # Center the text
+$textBoxName.Location = New-Object System.Drawing.Point(405, 95) # Increase X = Right, y = Down
+$textBoxName.Size = New-Object System.Drawing.Size(330, 160)      # Increase W = Wider, H = Taller.
+$textBoxName.Font = New-Object System.Drawing.Font("Agency FB", 11, [System.Drawing.FontStyle]::Bold)
+$textBoxName.TextAlign = [System.Windows.Forms.HorizontalAlignment]::Left # Center the text
+#$textBoxName.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+#$textBoxName.FlatAppearance.BorderSize = 0
 $textBoxName.BorderStyle = "None"
+#$textBoxName.BorderStyle = "Fixed3D"
 $textBoxName.BackColor = $form.BackColor
-$textBoxName.ForeColor = [System.Drawing.Color]::DarkSlateGray
+#$textBoxName.BackColor = "MintCream"
+$textBoxName.ForeColor = [System.Drawing.Color]::SaddleBrown
 $textBoxName.CharacterCasing = "Upper"
 $form.Controls.Add($textBoxName)
 
@@ -2988,15 +3069,17 @@ $form.Controls.Add($textBoxName)
 # Label Description Label
 $labelDescription = New-Object System.Windows.Forms.Label
 $labelDescription.Text = "Description:"
-$labelDescription.Location = New-Object System.Drawing.Point(410, 140) # Increase X = Right, y = Down
-$labelDescription.Size = New-Object System.Drawing.Size(75, 20)       # Increase W = Wider, H = Taller.
+$labelDescription.Location = New-Object System.Drawing.Point(405, 125) # Increase X = Right, y = Down
+$labelDescription.Size = New-Object System.Drawing.Size(75, 15)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelDescription)
 
 # Label Description TextBox
 $textBoxDescription = New-Object System.Windows.Forms.TextBox
-$textBoxDescription.Location = New-Object System.Drawing.Point(520, 140) # Increase X = Right, y = Down
-$textBoxDescription.Size = New-Object System.Drawing.Size(330, 110)       # Increase W = Wider, H = Taller.
+$textBoxDescription.Location = New-Object System.Drawing.Point(405, 140) # Increase X = Right, y = Down
+$textBoxDescription.Size = New-Object System.Drawing.Size(330, 80)       # Increase W = Wider, H = Taller.
 $textBoxDescription.Multiline = $true
+$textBoxDescription.CharacterCasing = "Upper"
+$textBoxDescription.Backcolor = "MintCream"
 $textBoxDescription.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
@@ -3019,11 +3102,11 @@ $textBoxDescription.Add_Leave({
                 # Clear the RichTextBoxOutput and display the updated Description field data
                 $richTextBoxOutput.Clear()
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Arial", 12, [System.Drawing.FontStyle]::Regular)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Green
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::PapayaWhip
                 $richTextBoxOutput.AppendText("Description for script '$selectedScript' updated successfully!" + [Environment]::NewLine)
 
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Consolas", 10)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Blue
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Silver
 
                 $descriptionData = @{
                     Description = @{
@@ -3060,21 +3143,18 @@ $textBoxDescription.Add_Leave({
 
 $form.Controls.Add($textBoxDescription)
 
-################################### DESCRIPTION LABEL & TEXT BOX  #########################################
-
-##################################### VERSION LABEL & TEXT BOX  ###########################################
-
 # Label Version
 $labelVersion = New-Object System.Windows.Forms.Label
-$labelVersion.Text = "Version:"
-$labelVersion.Location = New-Object System.Drawing.Point(410, 259) # Increase X = Right, y = Down
-$labelVersion.Size = New-Object System.Drawing.Size(100, 20)       # Increase W = Wider, H = Taller.
+$labelVersion.Text = "Ver"
+$labelVersion.Location = New-Object System.Drawing.Point(520, 230) # Increase X = Right, y = Down
+$labelVersion.Size = New-Object System.Drawing.Size(30, 15)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelVersion)
 
 # TextBox Version
 $textBoxVersion = New-Object System.Windows.Forms.TextBox
-$textBoxVersion.Location = New-Object System.Drawing.Point(520, 259) # Increase X = Right, y = Down
-$textBoxVersion.Size = New-Object System.Drawing.Size(330, 20)       # Increase W = Wider, H = Taller.
+$textBoxVersion.Location = New-Object System.Drawing.Point(520, 245) # Increase X = Right, y = Down
+$textBoxVersion.Size = New-Object System.Drawing.Size(30, 20)       # Increase W = Wider, H = Taller.
+$textBoxVersion.Backcolor = "MintCream"
 $textBoxVersion.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
@@ -3097,11 +3177,11 @@ $textBoxVersion.Add_Leave({
                 # Clear the RichTextBoxOutput and display the updated Version field data
                 $richTextBoxOutput.Clear()
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Arial", 12, [System.Drawing.FontStyle]::Regular)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Green
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::PapayaWhip
                 $richTextBoxOutput.AppendText("Version for script '$selectedScript' updated successfully!" + [Environment]::NewLine)
 
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Consolas", 10)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Blue
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Silver
 
                 $versionData = @{
                     Version = @{
@@ -3140,15 +3220,17 @@ $form.Controls.Add($textBoxVersion)
 
 # Author Label
 $labelAuthor = New-Object System.Windows.Forms.Label
-$labelAuthor.Text = "Author:"
-$labelAuthor.Location = New-Object System.Drawing.Point(410, 289) # Increase X = Right, y = Down
-$labelAuthor.Size = New-Object System.Drawing.Size(50, 20)       # Increase W = Wider, H = Taller.
+$labelAuthor.Text = "Author"
+$labelAuthor.Location = New-Object System.Drawing.Point(560, 230) # Increase X = Right, y = Down
+$labelAuthor.Size = New-Object System.Drawing.Size(135, 15)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelAuthor)
 
 # Author TextBox
 $textBoxAuthor = New-Object System.Windows.Forms.TextBox
-$textBoxAuthor.Location = New-Object System.Drawing.Point(520, 289) # Increase X = Right, y = Down
-$textBoxAuthor.Size = New-Object System.Drawing.Size(330, 20)       # Increase W = Wider, H = Taller.
+$textBoxAuthor.Location = New-Object System.Drawing.Point(560, 245) # Increase X = Right, y = Down
+$textBoxAuthor.Size = New-Object System.Drawing.Size(140, 20)       # Increase W = Wider, H = Taller.
+$textBoxAuthor.BackColor = "MintCream"
+$textBoxAuthor.CharacterCasing = "Upper"
 $textBoxAuthor.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
@@ -3171,11 +3253,11 @@ $textBoxAuthor.Add_Leave({
                 # Clear the RichTextBoxOutput and display the updated Author field data
                 $richTextBoxOutput.Clear()
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Arial", 12, [System.Drawing.FontStyle]::Regular)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Green
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::PapayaWhip
                 $richTextBoxOutput.AppendText("Author for script '$selectedScript' updated successfully!" + [Environment]::NewLine)
 
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Consolas", 10)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Blue
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Silver
 
                 $authorData = @{
                     Author = @{
@@ -3209,50 +3291,20 @@ $textBoxAuthor.Add_Leave({
         [System.Windows.Forms.MessageBox]::Show("Please select a Script to save its JSON file.", "Information", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
     }
 })
-
 $form.Controls.Add($textBoxAuthor)
-
-# Date Created Label
-$labelDateCreated = New-Object System.Windows.Forms.Label
-$labelDateCreated.Text = "Date Created:"
-$labelDateCreated.Location = New-Object System.Drawing.Point(410, 379) # Adjusted location
-$labelDateCreated.Size = New-Object System.Drawing.Size(100, 20)
-$form.Controls.Add($labelDateCreated)
-
-# Date Created Textbox
-$textBoxDateCreated = New-Object System.Windows.Forms.TextBox
-$textBoxDateCreated.Location = New-Object System.Drawing.Point(520, 379) # Adjusted location
-$textBoxDateCreated.Size = New-Object System.Drawing.Size(330, 20)
-$textBoxDateCreated.ReadOnly = $true
-$form.Controls.Add($textBoxDateCreated)
-
-# Date Modified Label
-$labelDateModified = New-Object System.Windows.Forms.Label
-$labelDateModified.Text = "Date Modified:"
-$labelDateModified.Location = New-Object System.Drawing.Point(410, 349) # Increase X = Right, y = Down
-$labelDateModified.Size = New-Object System.Drawing.Size(100, 20)      # Increase W for wider, H for taller
-$form.Controls.Add($labelDateModified)
-
-# Date Modified TextBox
-$textBoxDateModified = New-Object System.Windows.Forms.TextBox
-$textBoxDateModified.Location = New-Object System.Drawing.Point(520, 349) # Increase X = Right, y = Down
-$textBoxDateModified.Size = New-Object System.Drawing.Size(330, 20)      # Same size as author and created.
-#$textBoxDateModified.BackColor = [System.Drawing.Color]::White
-$textBoxDateModified.ReadOnly = $true
-$form.Controls.Add($textBoxDateModified)
 
 # Modified By Label
 $labelModifiedBy = New-Object System.Windows.Forms.Label
 $labelModifiedBy.Text = "Modified By:"
-$labelModifiedBy.Location = New-Object System.Drawing.Point(410, 319) # Adjusted location
-$labelModifiedBy.Size = New-Object System.Drawing.Size(100, 20)
+$labelModifiedBy.Location = New-Object System.Drawing.Point(710, 230) # Increase X = Right, y = Down
+$labelModifiedBy.Size = New-Object System.Drawing.Size(140, 15)      # Increase W for wider, H for talle
 $form.Controls.Add($labelModifiedBy)
 
 # Modified By TextBox
 $textBoxModifiedBy = New-Object System.Windows.Forms.TextBox
-$textBoxModifiedBy.Location = New-Object System.Drawing.Point(520, 319) # Adjusted location
-$textBoxModifiedBy.Size = New-Object System.Drawing.Size(330, 20)
-$textBoxModifiedBy.BackColor = [System.Drawing.Color]::White
+$textBoxModifiedBy.Location = New-Object System.Drawing.Point(710, 245) # Increase X = Right, y = Down
+$textBoxModifiedBy.Size = New-Object System.Drawing.Size(140, 20)       # Increase W for wider, H for talle
+$textBoxModifiedBy.BackColor = [System.Drawing.Color]::Mintcream
 $textBoxModifiedBy.Add_Leave({
     $selectedScript = $listBoxScripts.SelectedItem
     if ($selectedScript) {
@@ -3275,11 +3327,11 @@ $textBoxModifiedBy.Add_Leave({
                 # Clear the RichTextBoxOutput and display the updated ModifiedBy field data
                 $richTextBoxOutput.Clear()
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Arial", 12, [System.Drawing.FontStyle]::Regular)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Green
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::PapayaWhip
                 $richTextBoxOutput.AppendText("ModifiedBy for script '$selectedScript' updated successfully!" + [Environment]::NewLine)
 
                 $richTextBoxOutput.SelectionFont = New-Object System.Drawing.Font("Consolas", 10)
-                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Blue
+                $richTextBoxOutput.SelectionColor = [System.Drawing.Color]::Silver
 
                 $modifiedByData = @{
                     ModifiedBy = @{
@@ -3315,41 +3367,52 @@ $textBoxModifiedBy.Add_Leave({
 })
 $form.Controls.Add($textBoxModifiedBy)
 
+# Date Created Label
+$labelDateCreated = New-Object System.Windows.Forms.Label
+$labelDateCreated.Text = "Created:"
+$labelDateCreated.Location = New-Object System.Drawing.Point(520, 270) # Increase X = Right, y = Down
+$labelDateCreated.Size = New-Object System.Drawing.Size(100, 15)       # Increase W for wider, H for talle
+$form.Controls.Add($labelDateCreated)
 
+# Date Created Textbox
+$textBoxDateCreated = New-Object System.Windows.Forms.TextBox
+$textBoxDateCreated.Location = New-Object System.Drawing.Point(520, 285) # Increase X = Right, y = Down
+$textBoxDateCreated.Size = New-Object System.Drawing.Size(160, 20)       # Increase W for wider, H for talle
+$textBoxDateCreated.Backcolor = "MintCream"
+$textBoxDateCreated.ReadOnly = $true
+$form.Controls.Add($textBoxDateCreated)
 
-# Create Modification Log button
-$buttonModificationLog = New-Object System.Windows.Forms.Button
-$buttonModificationLog.Text = "View Modification Log"
-$buttonModificationLog.Location = New-Object System.Drawing.Point(500, 495)  # Increase X = Right, Y = Down
-$buttonModificationLog.Size = New-Object System.Drawing.Size(180, 30)        # Increase W = Wider, H = Taller.
-$buttonModificationLog.BackColor = [System.Drawing.Color]::SaddleBrown
-$buttonModificationLog.ForeColor = [System.Drawing.Color]::White
-$buttonModificationLog.Add_Click({ ShowModificationLog })
-$form.Controls.Add($buttonModificationLog)
+# Date Modified Label
+$labelDateModified = New-Object System.Windows.Forms.Label
+$labelDateModified.Text = "Modified:"
+$labelDateModified.Location = New-Object System.Drawing.Point(690, 270) # Increase X = Right, y = Down
+$labelDateModified.Size = New-Object System.Drawing.Size(100, 15)      # Increase W for wider, H for taller
+$form.Controls.Add($labelDateModified)
 
-# Create View To-Do List button
-$buttonViewToDoList = New-Object System.Windows.Forms.Button
-$buttonViewToDoList.Text = "View To-Do List"
-$buttonViewToDoList.Location = New-Object System.Drawing.Point(672, 495)  # Adjust the location
-$buttonViewToDoList.Size = New-Object System.Drawing.Size(180, 30)        # Adjust the size
-$buttonViewToDoList.BackColor = [System.Drawing.Color]::SaddleBrown
-$buttonViewToDoList.ForeColor = [System.Drawing.Color]::White  # Set text color
-$buttonViewToDoList.Add_Click({ ShowToDoList })
-$form.Controls.Add($buttonViewToDoList)
+# Date Modified TextBox
+$textBoxDateModified = New-Object System.Windows.Forms.TextBox
+$textBoxDateModified.Location = New-Object System.Drawing.Point(690, 285) # Increase X = Right, y = Down
+$textBoxDateModified.Size = New-Object System.Drawing.Size(160, 20)      # Increase W for wider, H for talle
+$textBoxDateModified.Backcolor = "MintCream"
+$textBoxDateModified.ReadOnly = $true
+$form.Controls.Add($textBoxDateModified)
+
 
 # JSON File Label
 $labelJsonFile = New-Object System.Windows.Forms.Label
 $labelJsonFile.Text = "JSON File:"
-$labelJsonFile.Location = New-Object System.Drawing.Point(410, 410) # Increase X = Right, y = Down
-$labelJsonFile.Size = New-Object System.Drawing.Size(100, 20)       # Increase W = Wider, H = Taller.
+$labelJsonFile.Location = New-Object System.Drawing.Point(520, 310) # Increase X = Right, y = Down
+$labelJsonFile.Size = New-Object System.Drawing.Size(60, 15)       # Increase W = Wider, H = Taller.
 $form.Controls.Add($labelJsonFile)
 
 # JSON File Textbox
 $textBoxJsonFile = New-Object System.Windows.Forms.TextBox
-$textBoxJsonFile.Location = New-Object System.Drawing.Point(520, 410) # Increase X = Right, y = Down
-$textBoxJsonFile.Size = New-Object System.Drawing.Size(330, 20)       # Increase W = Wider, H = Taller.
+$textBoxJsonFile.Location = New-Object System.Drawing.Point(520, 325) # Increase X = Right, y = Down
+$textBoxJsonFile.Size = New-Object System.Drawing.Size(330, 15)       # Increase W = Wider, H = Taller.
 $textBoxJsonFile.CharacterCasing = "Upper"
-#$textBoxJsonFile.BackColor = [System.Drawing.Color]::Pink
+$textBoxJsonFile.BackColor = [System.Drawing.Color]::Mintcream
+$textBoxJsonFile.ForeColor = [System.Drawing.Color]::Black
+$textBoxJsonFile.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
 $textBoxJsonFile.ReadOnly = $true
 $form.Controls.Add($textBoxJsonFile)
 
@@ -3441,6 +3504,414 @@ $buttonDeleteJson.Add_Click({
 })
 $form.Controls.Add($buttonDeleteJson)
 
+
+# Create a button to initiate the search
+$searchButton = New-Object System.Windows.Forms.Button
+$searchButton.Location = New-Object System.Drawing.Point(865, 345)    # Increase X = Right, y = Down
+$searchButton.Size = New-Object System.Drawing.Size(185, 30)          # Increase W for wider, H for talle
+$searchButton.backcolor = [System.Drawing.Color]::SaddleBrown
+$searchButton.forecolor = [System.Drawing.Color]::White
+$searchButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$searchButton.FlatAppearance.BorderSize = 0
+$searchButton.Text = "FILTER BY KEYWORDS"
+$searchButton.Add_Click({
+    # Create a new form for selecting keywords
+    $keywordsForm = New-Object System.Windows.Forms.Form
+    $keywordsForm.Text = "Select Keywords"
+    $keywordsForm.Size = New-Object System.Drawing.Size(300, 1000)
+    $keywordsForm.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+    $keywordsForm.BackColor = "SaddleBrown"
+
+    # Collect unique keywords from all JSON files
+    $keywords = Get-ChildItem -Path $global:BaseScriptPath -Filter '*.json' | ForEach-Object {
+        $jsonContent = Get-Content -Path $_.FullName | ConvertFrom-Json
+        $jsonContent.Keywords
+    } | Sort-Object | Select-Object -Unique
+
+    # Create a ListBox for available Keywords, sorted alphabetically
+    $listBoxKeywords = New-Object System.Windows.Forms.ListBox
+    $listBoxKeywords.Location = New-Object System.Drawing.Point(30, 50)  # Increase X = Right, Y = Down
+    $listBoxKeywords.Size = New-Object System.Drawing.Size(225, 880)     # Increase W = Wider, H = Taller
+    $listBoxKeywords.Font = New-Object System.Drawing.Font("Arial Narrow", 10)
+    $listBoxKeywords.BackColor = "LightYellow"
+    $listBoxKeywords.SelectionMode = [System.Windows.Forms.SelectionMode]::MultiSimple
+    $keywords | ForEach-Object { $listBoxKeywords.Items.Add($_) }
+
+    $listBoxKeywords.Add_SelectedIndexChanged({
+        # Clear the scripts ListBox
+        $listBoxScripts.Items.Clear()
+
+        # Get selected keywords
+        $selectedKeywords = $listBoxKeywords.SelectedItems
+
+        # Iterate through the scripts and JSON files, filtering by selected keywords
+        $scripts = Get-ChildItem -Path $global:BaseScriptPath -Filter '*.ps1'
+        foreach ($script in $scripts) {
+            $jsonPath = [System.IO.Path]::ChangeExtension($script.FullName, 'json')
+            if (Test-Path -Path $jsonPath) {
+                $jsonContent = Get-Content -Path $jsonPath | ConvertFrom-Json
+
+                # Check if JSON content contains all selected keywords
+                if ($selectedKeywords | Where-Object { $jsonContent.Keywords -notcontains $_ }) {
+                    continue
+                }
+            }
+
+            # Add the script to the scripts ListBox without extension
+            $listBoxScripts.Items.Add($script.BaseName)
+        }
+    })
+
+    $keywordsForm.Controls.Add($listBoxKeywords)
+
+    # Show the keywords form
+    $keywordsForm.ShowDialog()
+})
+
+
+$form.Controls.Add($searchButton)
+
+<#
+$clearFilterButton = New-Object System.Windows.Forms.Button
+$clearFilterButton.Location = New-Object System.Drawing.Point(865, 230)  # Increase X = Right, Y = Down
+$clearFilterButton.Size = New-Object System.Drawing.Size(185, 25)        # Increase W = Wider, H = Taller
+$clearFilterButton.Text = "Clear Filter"
+$clearFilterButton.Add_Click({
+    $listBoxScripts.Items.Clear() # Clear the current list
+
+    # Load all scripts without filtering
+    $scripts = Get-ChildItem -Path $global:BaseScriptPath -Filter '*.ps1'
+    foreach ($script in $scripts) {
+        $listBoxScripts.Items.Add($script.BaseName) # Add scripts without extension
+    }
+})
+
+$form.Controls.Add($clearFilterButton)
+
+
+# Create a multiline text box for search input
+$searchTextBox = New-Object System.Windows.Forms.TextBox
+$searchTextBox.Location = New-Object System.Drawing.Point(865, 140) # Increase X = Right, Y = Down
+$searchTextBox.Size = New-Object System.Drawing.Size(185, 110)     # Increase W = Wider, H = Taller
+$searchTextBox.BackColor = [System.Drawing.Color]::LightYellow
+$searchTextBox.Font = New-Object System.Drawing.Font("Arial", 12)
+$searchTextBox.Multiline = $true
+$searchTextBox.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
+$searchTextBox.Text = 'Enter Keywords'
+$searchTextBox.ForeColor = [System.Drawing.Color]::Gray
+
+$searchTextBox.Add_Enter({
+    if ($this.Text -eq 'Enter Keywords') {
+        $this.Text = ''
+        $this.ForeColor = [System.Drawing.Color]::Black
+    }
+})
+
+$searchTextBox.Add_Leave({
+    if ($this.Text -eq '') {
+        $this.Text = 'Enter Keywords'
+        $this.ForeColor = [System.Drawing.Color]::Gray
+    }
+})
+
+$searchTextBox.Add_KeyPress({
+    # Check if Enter key was pressed
+    if ($_.KeyChar -eq [System.Windows.Forms.Keys]::Enter) {
+        $keywords = $searchTextBox.Text.Trim().Split(' ')
+
+        # Clear the scripts ListBox
+        $listBoxScripts.Items.Clear()
+
+        # Iterate through the scripts and JSON files
+        $scripts = Get-ChildItem -Path $global:BaseScriptPath -Filter '*.ps1'
+        foreach ($script in $scripts) {
+            $jsonPath = [System.IO.Path]::ChangeExtension($script.FullName, 'json')
+            if (Test-Path -Path $jsonPath) {
+                $jsonContent = Get-Content -Path $jsonPath | ConvertFrom-Json
+
+                # Check if JSON content contains all keywords
+                if ($keywords | Where-Object { $jsonContent.Keywords -notcontains $_ }) {
+                    continue
+                }
+            }
+
+            # Add the script to the scripts ListBox without extension
+            $listBoxScripts.Items.Add($script.BaseName)
+        }
+
+        # Clear the search TextBox
+        $searchTextBox.Text = ''
+    }
+})
+
+$form.Controls.Add($searchTextBox)
+
+
+#=================================================================== CHECK BOX AREA
+
+# Create a CheckedListBox for available Keywords
+$checkedListBoxKeywords = New-Object System.Windows.Forms.CheckedListBox
+$checkedListBoxKeywords.Location = New-Object System.Drawing.Point(865, 530)
+$checkedListBoxKeywords.Size = New-Object System.Drawing.Size(185, 235)
+$checkedListBoxKeywords.Font = New-Object System.Drawing.Font("Arial Narrow", 10)
+$checkedListBoxKeywords.BackColor = "LightYellow"
+$checkedListBoxKeywords.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+$form.Controls.Add($checkedListBoxKeywords)
+
+# Collect unique keywords from all JSON files
+$keywords = Get-ChildItem -Path $global:BaseScriptPath -Filter '*.json' | ForEach-Object {
+    $jsonContent = Get-Content -Path $_.FullName | ConvertFrom-Json
+    $jsonContent.Keywords
+} | Select-Object -Unique
+
+# Add unique keywords to the CheckedListBox
+$keywords | ForEach-Object { $checkedListBoxKeywords.Items.Add($_) }
+
+# Create a button to apply filters
+$filterButton = New-Object System.Windows.Forms.Button
+$filterButton.Text = 'Filter Scripts'
+$filterButton.Location = New-Object System.Drawing.Point(865, 770)
+$filterButton.Size = New-Object System.Drawing.Size(185, 40)
+$filterButton.Add_Click({
+    # Clear the scripts ListBox
+    $listBoxScripts.Items.Clear()
+
+    # Get selected keywords
+    $selectedKeywords = $checkedListBoxKeywords.CheckedItems
+
+    # Iterate through the scripts and JSON files, filtering by selected keywords
+    $scripts = Get-ChildItem -Path $global:BaseScriptPath -Filter '*.ps1'
+    foreach ($script in $scripts) {
+        $jsonPath = [System.IO.Path]::ChangeExtension($script.FullName, 'json')
+        if (Test-Path -Path $jsonPath) {
+            $jsonContent = Get-Content -Path $jsonPath | ConvertFrom-Json
+
+            # Check if JSON content contains all selected keywords
+            if ($selectedKeywords | Where-Object { $jsonContent.Keywords -notcontains $_ }) {
+                continue
+            }
+        }
+
+        # Add the script to the scripts ListBox without extension
+        $listBoxScripts.Items.Add($script.BaseName)
+    }
+})
+$form.Controls.Add($filterButton)
+
+#>
+
+
+
+# Button for Search Mode (Default button)
+$buttonSearchMode = New-Object System.Windows.Forms.Button
+$buttonSearchMode.Text = "SEARCH BY TAGS"
+$buttonSearchMode.Location = New-Object System.Drawing.Point(865,375) # Increase X = Right, Y = Down
+$buttonSearchMode.Size = New-Object System.Drawing.Size(185, 30)      # Increase W = Wider, H = Taller
+$buttonSearchMode.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonSearchMode.FlatAppearance.BorderSize = 0
+$buttonSearchMode.BackColor = [System.Drawing.Color]::SaddleBrown  # Light blue color
+$buttonSearchMode.ForeColor = [System.Drawing.Color]::White  # Black text color
+# Event handler for the "Search" button click
+$buttonSearchMode.Add_Click({
+    ShowTagSelectionForm
+})
+$form.Controls.Add($buttonSearchMode)
+
+# Create View To-Do List button
+$buttonViewToDoList = New-Object System.Windows.Forms.Button
+$buttonViewToDoList.Text = "TO DO LIST"
+$buttonViewToDoList.Location = New-Object System.Drawing.Point(865, 405)  # Increase X = Right, Y = Down
+$buttonViewToDoList.Size = New-Object System.Drawing.Size(185, 30)        # Increase W = Wider, H = Taller.
+$buttonViewToDoList.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonViewToDoList.FlatAppearance.BorderSize = 0
+$buttonViewToDoList.BackColor = [System.Drawing.Color]::SaddleBrown
+$buttonViewToDoList.ForeColor = [System.Drawing.Color]::White  # Set text color
+$buttonViewToDoList.Add_Click({ ShowToDoList })
+$form.Controls.Add($buttonViewToDoList)
+
+# Create Modification Log button
+$buttonModificationLog = New-Object System.Windows.Forms.Button
+$buttonModificationLog.Text = "CHANGE LOG"
+$buttonModificationLog.Location = New-Object System.Drawing.Point(865, 435)  # Increase X = Right, Y = Down
+$buttonModificationLog.Size = New-Object System.Drawing.Size(185, 30)        # Increase W = Wider, H = Taller.
+$buttonModificationLog.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonModificationLog.FlatAppearance.BorderSize = 0
+$buttonModificationLog.BackColor = [System.Drawing.Color]::SaddleBrown
+$buttonModificationLog.ForeColor = [System.Drawing.Color]::White
+$buttonModificationLog.Add_Click({ ShowModificationLog })
+$form.Controls.Add($buttonModificationLog)
+
+# Define the function to add keywords
+function AddKeywords {
+    param (
+        [string]$selectedScript,
+        [string]$baseScriptPath,
+        [System.Windows.Forms.TextBox]$newKeywordTextBox,
+        [System.Windows.Forms.ListBox]$listBoxKeywords
+    )
+
+    Write-Host "Base Script Path: $baseScriptPath"
+    Write-Host "Selected Script: $selectedScript"
+
+    if ([string]::IsNullOrEmpty($baseScriptPath) -or [string]::IsNullOrEmpty($selectedScript)) {
+        Write-Host "Error: baseScriptPath or selectedScript is null or empty."
+        return
+    }
+
+    $scriptPath = Join-Path -Path $baseScriptPath -ChildPath "$selectedScript.ps1"
+    $jsonPath = Join-Path -Path $baseScriptPath -ChildPath "$selectedScript.json"
+
+    $jsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
+
+    # Ensure "Keywords" property is initialized as an array
+    if ($null -eq $jsonContent.Keywords) {
+        $jsonContent.Keywords = @()
+    }
+
+    $newKeyword = $newKeywordTextBox.Text.Trim().ToUpper() # Converting to uppercase
+
+    if ($newKeyword -ne '' -and $newKeyword -ne 'Add New Keyword' -and $jsonContent.Keywords -notcontains $newKeyword) {
+        # Append the new keyword to the array
+        $jsonContent.Keywords += $newKeyword
+
+        # Sort and remove duplicates from the array
+        $jsonContent.Keywords = $jsonContent.Keywords | Sort-Object -Unique
+
+        # Update the ListBox with the updated keywords array
+        $listBoxKeywords.BeginUpdate()
+        $listBoxKeywords.Items.Clear()
+        $jsonContent.Keywords | ForEach-Object {
+            $listBoxKeywords.Items.Add($_)
+        }
+        $listBoxKeywords.EndUpdate()
+
+        # Save the updated JSON content back to the file
+        $jsonContent | ConvertTo-Json -Depth 4 | Set-Content -Path $jsonPath -Encoding UTF8
+
+        $newKeywordTextBox.Clear()
+
+        Write-Host "Adding keyword to ListBox." -ForegroundColor Green
+        Write-Host "JSON content updated and written to file." -ForegroundColor Green
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Please enter a valid and unique keyword.")
+    }
+    Write-Host "End of AddKeywords function" -ForegroundColor Green
+}
+
+function RemoveKeywords {
+    param (
+        [System.Windows.Forms.ListBox]$listBoxKeywords
+    )
+
+    $selectedScript = $global:selectedScript
+    $scriptPath = Get-ScriptFilePath -scriptName $selectedScript
+    $jsonPath = Get-JsonFilePath -scriptName $selectedScript
+
+    if (Test-Path -Path $jsonPath) {
+        $jsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
+
+        if ($null -eq $jsonContent.Keywords) {
+            Write-Host "Warning: 'Keywords' property not found in JSON content." -ForegroundColor Yellow
+            return
+        }
+
+        # Get selected keywords to remove
+        $selectedKeywordsToRemove = $listBoxKeywords.SelectedItems
+
+        # Remove selected keywords
+        $jsonContent.Keywords = $jsonContent.Keywords | Where-Object { $_ -notin $selectedKeywordsToRemove }
+
+        # Check if there are no remaining keywords
+        if ($null -eq $jsonContent.Keywords -or $jsonContent.Keywords.Count -eq 0) {
+            $jsonContent.Keywords = @() # Initialize Keywords as an empty array
+        } else {
+            # Update the ListBox with the updated keywords array
+            $listBoxKeywords.BeginUpdate()
+            $listBoxKeywords.Items.Clear()
+            $jsonContent.Keywords | ForEach-Object {
+                $listBoxKeywords.Items.Add($_)
+            }
+            $listBoxKeywords.EndUpdate()
+        }
+
+        # Save the updated JSON content back to the file
+        $jsonContent | ConvertTo-Json -Depth 4 | Set-Content -Path $jsonPath -Encoding UTF8
+
+        Write-Host "Selected keywords removed from ListBox and JSON content." -ForegroundColor Green
+    } else {
+        Write-Host "JSON Path does not exist: $jsonPath"
+    }
+}
+
+# Create a TextBox for new keywords input
+$newKeywordTextBox = New-Object System.Windows.Forms.TextBox
+$newKeywordTextBox.Location = New-Object System.Drawing.Point(865, 100) # Increase X = Right, Y = Down
+$newKeywordTextBox.Size = New-Object System.Drawing.Size(185, 30)      # Increase W = Wider, H = Taller
+$newKeywordTextBox.Font = New-Object System.Drawing.Font("Arial", 12)
+$newKeywordTextBox.BackColor = "MintCream"
+$newKeywordTextBox.TextAlign = [System.Windows.Forms.HorizontalAlignment]::Center # Center the text
+$newKeywordTextBox.Text = "Enter New Keyword"
+$newKeywordTextBox.ForeColor = [System.Drawing.Color]::Gray
+$newKeywordTextBox.Add_Enter({
+    if ($this.Text -eq 'Add New Keyword') {
+        $this.Text = '';
+        $this.ForeColor = [System.Drawing.Color]::Black;
+    }
+})
+$newKeywordTextBox.Add_Leave({
+    if ($this.Text -eq '') {
+        $this.Text = 'Add New Keyword';
+        $this.ForeColor = [System.Drawing.Color]::Gray;
+    }
+})
+$form.Controls.Add($newKeywordTextBox)
+
+# Create Add Keywords button
+$buttonAddKeywords = New-Object System.Windows.Forms.Button
+$buttonAddKeywords.Text = "ADD"
+$buttonAddKeywords.Location = New-Object System.Drawing.Point(960, 135)  # Increase X = Right, Y = Down
+$buttonAddKeywords.Size = New-Object System.Drawing.Size(90, 30)        # Increase W = Wider, H = Taller.
+$buttonAddKeywords.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonAddKeywords.FlatAppearance.BorderSize = 0
+$buttonAddKeywords.BackColor = [System.Drawing.Color]::DarkSeaGreen
+$buttonAddKeywords.ForeColor = [System.Drawing.Color]::White
+$buttonAddKeywords.Add_Click({
+    Write-Host "Executing AddKeywords function..."
+    Write-Host "ScriptPath: $global:BaseScriptPath"
+    Write-Host "SelectedScript: $selectedScript"
+    Write-Host "NewKeywordTextBox.Text: $($newKeywordTextBox.Text)"
+    AddKeywords -baseScriptPath $global:BaseScriptPath -selectedScript $selectedScript -newKeywordTextBox $newKeywordTextBox -listBoxKeywords $listBoxKeywords
+    Write-Host "AddKeywords function executed."
+})
+
+$form.Controls.Add($buttonAddKeywords)
+
+# Remove Selected Keywords Button
+$buttonRemoveKeywords = New-Object System.Windows.Forms.Button
+$buttonRemoveKeywords.Text = "REMOVE"
+$buttonRemoveKeywords.Location = New-Object System.Drawing.Point(865, 135) # Increase X = Right, Y = Down
+$buttonRemoveKeywords.Size = New-Object System.Drawing.Size(95, 30) # Increase W = Wider, H = Taller
+$buttonRemoveKeywords.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$buttonRemoveKeywords.FlatAppearance.BorderSize = 0
+$buttonRemoveKeywords.BackColor = [System.Drawing.Color]::LightSlateGray
+$buttonRemoveKeywords.ForeColor = [System.Drawing.Color]::White
+$buttonRemoveKeywords.Add_Click({
+    RemoveKeywords -defaultJsonPath $defaultJsonPath -listBoxKeywords $listBoxKeywords
+})
+$form.Controls.Add($buttonRemoveKeywords)
+
+# Create a ListBox for Keywords
+$listBoxKeywords = New-Object System.Windows.Forms.ListBox
+$listBoxKeywords.Location = New-Object System.Drawing.Point(865, 165) # Increase X = Right, Y = Down
+$listBoxKeywords.Size = New-Object System.Drawing.Size(185, 235)     # Increase W = Wider, H = Taller
+$listBoxKeywords.Font = New-Object System.Drawing.Font("Arial Narrow", 10)
+$listBoxKeywords.BackColor = "LightYellow"
+$listBoxKeywords.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+$listBoxKeywords.SelectionMode = "MultiSimple"
+$form.Controls.Add($listBoxKeywords)
+
+
+
 # Add controls to the form
 $form.Controls.Add($labelBackupCounter)
 $form.Controls.Add($labelBackupCountValue)
@@ -3529,22 +4000,25 @@ $buttonSave.Add_Click({
 $form.Controls.Add($buttonSave)
 #>
 # Create a label for the Tags section
-$labelTags = New-Object System.Windows.Forms.Label
-$labelTags.Text = ""
-$labelTags.Location = New-Object System.Drawing.Point(115, 505 )  # Increase X = Right, y = Down
-$labelTags.Size = New-Object System.Drawing.Size(100, 20) # Increase W = Wider, H = Taller.
-$form.Controls.Add($labelTags)
+#$labelTags = New-Object System.Windows.Forms.Label
+#$labelTags.Text = ""
+#$labelTags.Location = New-Object System.Drawing.Point(115, 505 )  # Increase X = Right, y = Down
+#$labelTags.Size = New-Object System.Drawing.Size(100, 20) # Increase W = Wider, H = Taller.
+#$form.Controls.Add($labelTags)
 
-# ListBox for Script Tags
+# ListBox for Script SizeTags
 $listBoxScriptTags = New-Object System.Windows.Forms.ListBox
-$listBoxScriptTags.Location = New-Object System.Drawing.Point(15, 530)  # Increase X = Right, y = Down
-$listBoxScriptTags.Size = New-Object System.Drawing.Size(835, 220)       # Increase W = Wider, H = Taller.
+$listBoxScriptTags.Location = New-Object System.Drawing.Point(400, 538)  # Increase X = Right, y = Down
+$listBoxScriptTags.Size = New-Object System.Drawing.Size(650, 240)       # Increase W = Wider, H = Taller.
+$listBoxScriptTags.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
 $listBoxScriptTags.SelectionMode = "MultiSimple"
 $listBoxScriptTags.DisplayMember = "Text"
 $listBoxScriptTags.ValueMember = "Tag"
-$listBoxScriptTags.ColumnWidth = 136
+$listBoxScriptTags.ColumnWidth = 130
 $listBoxScriptTags.MultiColumn = $true
-$listBoxScriptTags.Font = New-Object System.Drawing.Font("Arial", 16)  # Change the font family and size her
+$listBoxScriptTags.BackColor = "MintCream"
+$listBoxScriptTags.ForeColor = "Black"
+$listBoxScriptTags.Font = New-Object System.Drawing.Font("Arial Narrow", 9)  # Change the font family and size her
 $form.Controls.Add($listBoxScriptTags)
 
 # Event handler for the SelectedIndexChanged event of the $listBoxScriptTags ListBox
@@ -3561,7 +4035,6 @@ $listBoxScriptTags.Add_SelectedIndexChanged({
                 [System.Windows.Forms.MessageBox]::Show("Failed to read the JSON file: $jsonPath", "Error", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
                 return
             }
-
             try {
                 $jsonContent = $jsonContent | ConvertFrom-Json
             }
@@ -3576,25 +4049,34 @@ $listBoxScriptTags.Add_SelectedIndexChanged({
 
             $jsonString = $jsonContent | ConvertTo-Json -Depth 4
             $jsonString | Set-Content -Path $jsonPath -Encoding UTF8
-
-
+            
         }
     }
 })
 
-# abc Start here with Select Script Actions
+# Selecting a Script
 $listBoxScripts.Add_SelectedIndexChanged({
-    PopulateFieldsAndTags
-    $selectedScript = $listBoxScripts.SelectedItem.ToString()
-    $scriptPath = Get-ScriptFilePath -scriptName $selectedScript
-    $jsonPath = Get-JsonFilePath -scriptName $selectedScript
-    #Write-Host "Selected Script: $selectedScript"
-    #Write-Host "Script Path: $scriptPath"
-    #Write-Host "JSON Path: $jsonPath"
-    # Commenting out the update logic for now
-    $jsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
-    $jsonContent = UpdateJsonContent -jsonContent $jsonContent -selectedScript $selectedScript -scriptPath $scriptPath -jsonPath $jsonPath
+    if ($null -ne $listBoxScripts.SelectedItem) {
+        $global:selectedScript = $listBoxScripts.SelectedItem.ToString()
+        PopulateFieldsAndTags
+        $scriptPath = Get-ScriptFilePath -scriptName $global:selectedScript
+        $jsonPath = Get-JsonFilePath -scriptName $global:selectedScript
+
+        # Check if the jsonPath exists before attempting to read content
+        if (Test-Path -Path $jsonPath) {
+            $jsonContent = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
+            $jsonContent = UpdateJsonContent -jsonContent $jsonContent -selectedScript $global:selectedScript -scriptPath $scriptPath -jsonPath $jsonPath
+        } else {
+            Write-Host "JSON Path does not exist: $jsonPath"
+            # Handle error as needed
+        }
+    } else {
+        Write-Host "No item selected in listBoxScripts"
+        # Handle the error as needed
+    }
 })
+
+
 
 #Testing to see if this is needed
 $form.Controls.Add($listBoxScripts)

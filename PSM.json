@@ -1,29 +1,59 @@
 ﻿{
-    "ScriptPath":  "C:\\SCRIPTS\\PSM.ps1",
-    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
     "Name":  "PSM",
-    "Author":  "CURTI",
-    "Description":  "Please update this description",
-    "Version":  "0.1",
+    "Author":  "CJDOVE - ChatGPT",
+    "Description":  "BACKED UP RIGHT BEFORE STARTED FIXING JSON FILES ON SELECTION",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM.ps1",
+    "Version":  "0.4",
+    "ModifiedBy":  "CJDOVE - ChatGPT",
     "Tags":  [
-                 "📜 PowerShell"
+                 "🤖 Automation",
+                 "🔢 Counters",
+                 "👩‍💻 Development",
+                 "⭐ Favorite",
+                 "🏴 Mine",
+                 "📜 PowerShell",
+                 "🛠️ Tools"
              ],
-    "ModifiedBy":  "CURTI",
     "Modifications":  [
                           {
-                              "Date":  "August 11, 2023 at 11:14 PM",
-                              "Modification":  "Default script created.",
+                              "Date":  "August 11, 2023 at 3:35 PM",
+                              "Modification":  "FIXED RENAME EVENT TO UPDATE MODIFICATION LOG",
                               "ModifiedBy":  "CURTI",
                               "Version":  "0.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 5:17 PM",
+                              "Modification":  "UPDATED A WHOLE LOT OF SHIT WITH HIGHESTVERSION",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.2"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 8:52 PM",
+                              "Modification":  "ABOUT THE INCREASE THE SIZE OF THE FORM AND CHANGE THE DESIGN PRIOR TO IMPLEMENTING KEYWORDS",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.3"
+                          },
+                          {
+                              "Date":  "August 12, 2023 at 9:37 AM",
+                              "Modification":  "TEST",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.4"
                           }
                       ],
     "ToDoList":  [
                      {
+                         "Title":  "",
+                         "DateCompleted":  "",
+                         "Task":  "",
                          "Status":  "NotStarted",
-                         "Title":  "Review Script",
-                         "Task":  "Review Script for errors and Update!",
-                         "DateCompleted":  "August 11, 2023 at 11:14 PM",
                          "CompletedBy":  ""
                      }
+                 ],
+    "Keywords":  [
+                     "FAVORITE",
+                     "POWERSHELL",
+                     "PSM",
+                     "TAGGING"
                  ]
 }
