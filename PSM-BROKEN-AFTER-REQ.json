@@ -1,0 +1,41 @@
+﻿{
+    "ScriptJson":  "C:\\SCRIPTS\\PSM-BROKEN-AFTER-REQ.json",
+    "Description":  "New Script PSM.ps1",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM-BROKEN-AFTER-REQ.ps1",
+    "Version":  "0.2",
+    "ModifiedBy":  "CURTI",
+    "Tags":  [
+                 "📜 PowerShell"
+             ],
+    "Author":  "curti",
+    "Name":  "PSM-BROKEN-AFTER-REQ",
+    "Keywords":  [
+                     "POWERSHELL"
+                 ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 13, 2023 at 1:21 AM",
+                              "Modification":  "Created PSM.ps1 a JSON Buddy",
+                              "Version":  "0.1",
+                              "ModifiedBy":  "CURTI"
+                          },
+                          {
+                              "Date":  "August 14, 2023 at 9:36 AM",
+                              "Modification":  "Renamed Script and JSON from PSM_COPY to PSM-BROKEN-AFTER-REQ",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  0.2
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 13, 2023 at 1:21 AM",
+                         "CompletedBy":  ""
+                     }
+                 ],
+    "Requirements":  [
+
+                     ]
+}
