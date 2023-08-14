@@ -1,0 +1,77 @@
+﻿{
+    "Name":  "PSM-PRIOR-TO-REQUIREMENTS",
+    "Author":  "CJDOVE - ChatGPT",
+    "Description":  "BACKED UP RIGHT BEFORE STARTED FIXING JSON FILES ON SELECTION",
+    "ScriptJson":  "C:\\SCRIPTS\\PSM-PRIOR-TO-REQUIREMENTS.json",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM-PRIOR-TO-REQUIREMENTS.ps1",
+    "Version":  "0.7",
+    "ModifiedBy":  "CJDOVE - ChatGPT",
+    "Tags":  [
+                 "🤖 Automation",
+                 "🔢 Counters",
+                 "👩‍💻 Development",
+                 "⭐ Favorite",
+                 "🏴 Mine",
+                 "📜 PowerShell",
+                 "🛠️ Tools"
+             ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 11, 2023 at 3:35 PM",
+                              "Modification":  "FIXED RENAME EVENT TO UPDATE MODIFICATION LOG",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.1"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 5:17 PM",
+                              "Modification":  "UPDATED A WHOLE LOT OF SHIT WITH HIGHESTVERSION",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.2"
+                          },
+                          {
+                              "Date":  "August 11, 2023 at 8:52 PM",
+                              "Modification":  "ABOUT THE INCREASE THE SIZE OF THE FORM AND CHANGE THE DESIGN PRIOR TO IMPLEMENTING KEYWORDS",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.3"
+                          },
+                          {
+                              "Date":  "August 12, 2023 at 9:37 AM",
+                              "Modification":  "TEST",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.4"
+                          },
+                          {
+                              "Date":  "August 13, 2023 at 6:40 PM",
+                              "Modification":  "COMPLETED UI MAKEOVER, UPDATED TAGS, UPDATED JSON FILE BUTTONS, ABOUT TO START REQUIREMENTS",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.5"
+                          },
+                          {
+                              "Date":  "August 13, 2023 at 10:55 PM",
+                              "Modification":  "CREATING BACK TO START IMPLEMENTING REQUIREMENTS INTO THE PROCESS.",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  "0.6"
+                          },
+                          {
+                              "Date":  "August 13, 2023 at 10:56 PM",
+                              "Modification":  "Renamed Script and JSON from PSM_COPY to PSM-PRIOR-TO-REQUIREMENTS",
+                              "ModifiedBy":  "CURTI",
+                              "Version":  0.7
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Title":  "",
+                         "DateCompleted":  "",
+                         "Task":  "",
+                         "Status":  "NotStarted",
+                         "CompletedBy":  ""
+                     }
+                 ],
+    "Keywords":  [
+                     "FAVORITE",
+                     "POWERSHELL",
+                     "PSM",
+                     "TAGGING"
+                 ]
+}
