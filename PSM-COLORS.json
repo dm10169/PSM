@@ -1,0 +1,39 @@
+﻿{
+    "Requirements":  [
+
+                     ],
+    "ScriptJson":  "C:\\SCRIPTS\\PSM-COLORS.json",
+    "Description":  "New Script PSM-COLORS",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM-COLORS.ps1",
+    "Version":  "0.1",
+    "ModifiedBy":  "CJDOVE",
+    "Tags":  [
+                 "🔍 ARI Storage",
+                 "🚀 Deployment",
+                 "🏴 Mine",
+                 "📜 PowerShell"
+             ],
+    "Author":  "CJDOVE",
+    "Name":  "PSM-COLORS",
+    "Keywords":  [
+                     "ERIN",
+                     "POWERSHELL"
+                 ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 14, 2023 at 8:04 PM",
+                              "Modification":  "Created PSM-COLORS a JSON Buddy",
+                              "Version":  "0.1",
+                              "ModifiedBy":  "CJDOVE"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  0,
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 14, 2023 at 8:04 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}
