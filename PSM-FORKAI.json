@@ -1,0 +1,94 @@
+﻿{
+    "Requirements":  [
+
+                     ],
+    "ScriptJson":  "C:\\SCRIPTS\\PSM-FORKAI.json",
+    "Description":  "\"POWERSHELL SCRIPT MANAGER (PSM) LETS YOU MANAGE SCRIPTS WITH KEYWORDS AND ICON TAGS. UTILIZE AUTOMATED VERSION CONTROL AND ESSENTIAL FUNCTIONS LIKE COPY, CREATE, AND BACKUP. UNZIP, RUN, AND PSM ORGANIZES EVERYTHING FOR YOU.",
+    "ScriptPath":  "C:\\SCRIPTS\\PSM-FORKAI.ps1",
+    "Version":  "0.9",
+    "ModifiedBy":  "CJDOVE",
+    "Tags":  [
+                 "🐛 Bug Fix",
+                 "⭐ Favorite",
+                 "🔥 Firewall",
+                 "🔝 High Priority",
+                 "🔗 Remoting",
+                 "🔀 Switch"
+             ],
+    "Author":  "CJDOVE",
+    "Name":  "PSM-FORKAI",
+    "Keywords":  [
+                     "POWERSHELL"
+                 ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 14, 2023 at 6:24 PM",
+                              "Modification":  "Created PSM-AFTER-BROKEN a JSON Buddy",
+                              "Version":  "0.1",
+                              "ModifiedBy":  "CJDOVE"
+                          },
+                          {
+                              "Date":  "August 14, 2023 at 8:15 PM",
+                              "Modification":  "Renamed Script and JSON from PSM-AFTER-BROKEN_COPY to PSM-MASTER",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  0.2
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 6:24 AM",
+                              "Modification":  "ADDED REQUIREMENTS, KEYWORDS, IMAGES",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.3"
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 7:35 AM",
+                              "Modification":  "DID SOME CLEAN UP TO GIVE TO OTHERS.",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.4"
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 7:36 AM",
+                              "Modification":  "Renamed Script and JSON from PSM-MASTER to PSM",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  0.5
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 8:49 AM",
+                              "Modification":  "UPGRADED",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.6"
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 9:02 AM",
+                              "Modification":  "Renamed Script and JSON from PSM_COPY to POWERSHELL-SCRIPT-MANAGER",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  0.7
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 12:03 PM",
+                              "Modification":  "PROR TO RESIZE",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  "0.8"
+                          },
+                          {
+                              "Date":  "August 15, 2023 at 12:04 PM",
+                              "Modification":  "Renamed Script and JSON from POWERSHELL-SCRIPT-MANAGER_COPY to PSM-BIG",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  0.9
+                          },
+                          {
+                              "Date":  "August 18, 2023 at 5:20 PM",
+                              "Modification":  "Renamed Script and JSON from PSM-BIG to PSM-FORKAI",
+                              "ModifiedBy":  "CJDOVE",
+                              "Version":  1
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 14, 2023 at 6:24 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}
