@@ -1,0 +1,35 @@
+﻿{
+    "Requirements":  [
+
+                     ],
+    "ScriptJson":  "C:\\SCRIPTS\\BIG.json",
+    "Description":  "New Script BIG",
+    "ScriptPath":  "C:\\SCRIPTS\\BIG.ps1",
+    "Version":  "0.1",
+    "ModifiedBy":  "CURTIS DOVE",
+    "Tags":  [
+                 "📜 PowerShell"
+             ],
+    "Author":  "CURTIS DOVE",
+    "Name":  "BIG",
+    "Keywords":  [
+                     "POWERSHELL"
+                 ],
+    "Modifications":  [
+                          {
+                              "Date":  "August 19, 2023 at 11:53 PM",
+                              "Modification":  "Created BIG a JSON Buddy",
+                              "Version":  "0.1",
+                              "ModifiedBy":  "CURTI"
+                          }
+                      ],
+    "ToDoList":  [
+                     {
+                         "Status":  "NotStarted",
+                         "Title":  "Review Script",
+                         "Task":  "Review Script for errors and Update!",
+                         "DateCompleted":  "August 19, 2023 at 11:53 PM",
+                         "CompletedBy":  ""
+                     }
+                 ]
+}

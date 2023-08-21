@@ -3,11 +3,15 @@
     "Description":  "New Script FORMCOLORSPALETTEBACKCOLORS",
     "ScriptPath":  "C:\\SCRIPTS\\FORMCOLORSPALETTEBACKCOLORS.ps1",
     "Version":  "0.1",
-    "ModifiedBy":  "CURTI",
+    "ModifiedBy":  "CURTS",
     "Tags":  [
-                 "📜 PowerShell"
+                 "⌨️ Commands",
+                 "✏️ Design",
+                 "🏴 Mine",
+                 "📜 PowerShell",
+                 "🛠️ Tools"
              ],
-    "Author":  "curti",
+    "Author":  "CURTIS DOVE",
     "Name":  "FORMCOLORSPALETTEBACKCOLORS",
     "Modifications":  [
                           {
@@ -25,5 +29,14 @@
                          "DateCompleted":  "August 11, 2023 at 4:33 PM",
                          "CompletedBy":  ""
                      }
-                 ]
+                 ],
+    "Keywords":  [
+                     "BACKCOLOR",
+                     "COLORS",
+                     "FORECOLOR",
+                     "POWERSHELL"
+                 ],
+    "Requirements":  [
+
+                     ]
 }
